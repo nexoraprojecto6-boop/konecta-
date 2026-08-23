@@ -1,0 +1,32 @@
+{
+  "name": "konecta",
+  "private": true,
+  "version": "0.1.0",
+  "description": "KONECTA - Plataforma de conexão de pessoas a serviços, profissionais, empresas, empregos e oportunidades (Angola e Moçambique).",
+  "engines": {
+    "node": ">=18.18.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.0",
+  "scripts": {
+    "dev:api": "pnpm --filter @konecta/api start:dev",
+    "build:api": "pnpm --filter @konecta/api build",
+    "start:api": "pnpm --filter @konecta/api start:prod",
+    "dev:admin": "pnpm --filter @konecta/admin dev",
+    "build:admin": "pnpm --filter @konecta/admin build",
+    "start:admin": "pnpm --filter @konecta/admin start",
+    "dev:mobile": "pnpm --filter @konecta/mobile start",
+    "lint": "pnpm -r --if-present lint",
+    "build": "pnpm -r --if-present build",
+    "prisma:generate": "pnpm --filter @konecta/api exec prisma generate --schema=../../prisma/schema.prisma",
+    "prisma:migrate:dev": "pnpm --filter @konecta/api exec prisma migrate dev --schema=../../prisma/schema.prisma",
+    "prisma:studio": "pnpm --filter @konecta/api exec prisma studio --schema=../../prisma/schema.prisma",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.5.4"
+  }
+}

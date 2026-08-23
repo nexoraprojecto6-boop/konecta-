@@ -1,0 +1,17 @@
+// ==================================================
+// KONECTA - Prisma Schema (Fase 1 - Fundação)
+// ==================================================
+// Nesta fase não há models de negócio.
+// Apenas a configuração base do datasource e do generator,
+// incluindo a extensão PostGIS para uso futuro em localização.
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [postgis]
+}

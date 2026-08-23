@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "KONECTA",
+    "slug": "konecta",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.konecta.app"
+    },
+    "android": {
+      "package": "com.konecta.app"
+    }
+  }
+}

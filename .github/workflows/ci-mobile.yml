@@ -1,0 +1,44 @@
+name: CI - Mobile
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/mobile/**"
+      - "packages/**"
+      - "pnpm-workspace.yaml"
+      - "package.json"
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/mobile/**"
+      - "packages/**"
+      - "pnpm-workspace.yaml"
+      - "package.json"
+
+jobs:
+  lint-and-typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - name: Instalar dependências
+        run: pnpm install --frozen-lockfile
+
+      - name: Build dos pacotes compartilhados
+        run: pnpm --filter "./packages/**" build
+
+      - name: Lint
+        run: pnpm --filter @konecta/mobile lint
+
+      - name: Verificação de tipos
+        run: pnpm --filter @konecta/mobile exec tsc --noEmit
