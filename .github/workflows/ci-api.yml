@@ -8,6 +8,7 @@ on:
       - "packages/**"
       - "prisma/**"
       - "pnpm-workspace.yaml"
+      - "pnpm-lock.yaml"
       - "package.json"
   pull_request:
     branches: [main]
@@ -16,17 +17,19 @@ on:
       - "packages/**"
       - "prisma/**"
       - "pnpm-workspace.yaml"
+      - "pnpm-lock.yaml"
       - "package.json"
 
 jobs:
   build-and-lint:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v4
         with:
-          version: 8
+          version: 8.15.0
 
       - uses: actions/setup-node@v4
         with:
