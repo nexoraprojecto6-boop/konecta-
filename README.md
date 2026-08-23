@@ -1,6 +1,6 @@
 # KONECTA
 
-Plataforma para Angola e Moçambique que conecta pessoas a serviços, profissionais, empresas, empregos, produtos, marketplace, entregas, transporte e oportunidades próximas da localização do utilizador.
+Plataforma para Angola    e Moçambique que conecta pessoas a serviços, profissionais, empresas, empregos, produtos, marketplace, entregas, transporte e oportunidades próximas da localização do utilizador.
 
 > **Status:** Fase 1 — Fundação da arquitetura. Nenhuma funcionalidade de negócio (login, OTP, GPS, marketplace, pagamentos, delivery, chat) foi implementada ainda.
 
