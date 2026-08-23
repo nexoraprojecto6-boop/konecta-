@@ -37,9 +37,6 @@ jobs:
       - name: Build dos pacotes compartilhados
         run: pnpm --filter "./packages/**" build
 
-      - name: Gerar Prisma Client
-        run: pnpm prisma:generate
-
       - name: Lint
         run: pnpm --filter @konecta/api lint
 
