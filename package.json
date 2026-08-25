@@ -1,7 +1,7 @@
 {
   "name": "konecta",
   "private": true,
-  "version": "0.1.2",
+  "version": "0.1.0",
   "description": "KONECTA - Plataforma de conexão de pessoas a serviços, profissionais, empresas, empregos e oportunidades (Angola e Moçambique).",
   "engines": {
     "node": ">=18.18.0",

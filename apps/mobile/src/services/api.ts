@@ -1,10 +1,30 @@
-import type { HealthStatus } from "@konecta/types";
+import type {
+  HealthStatus,
+  AuthResponse,
+  AuthTokens,
+  RegisterPayload,
+  LoginPayload,
+  User,
+} from "@konecta/types";
 import { env } from "../config/env";
 
 /**
  * Cliente HTTP simples usando fetch nativo.
- * Fase 1: apenas health check. Sem autenticação ainda.
+ * Fase 1: apenas health check.
+ * Fase 2: endpoints de autenticação e usuário.
  */
+
+async function parseJsonOrThrow(response: Response): Promise<unknown> {
+  const body = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    const message =
+      (body as { message?: string })?.message ?? `Erro ${response.status}`;
+    throw new Error(message);
+  }
+
+  return body;
+}
 
 export async function getApiHealth(): Promise<HealthStatus> {
   const response = await fetch(`${env.apiUrl}/health`);
@@ -14,4 +34,50 @@ export async function getApiHealth(): Promise<HealthStatus> {
   }
 
   return response.json() as Promise<HealthStatus>;
+}
+
+export async function register(
+  payload: RegisterPayload,
+): Promise<AuthResponse> {
+  const response = await fetch(`${env.apiUrl}/auth/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  return parseJsonOrThrow(response) as Promise<AuthResponse>;
+}
+
+export async function login(payload: LoginPayload): Promise<AuthResponse> {
+  const response = await fetch(`${env.apiUrl}/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  return parseJsonOrThrow(response) as Promise<AuthResponse>;
+}
+
+export async function refresh(refreshToken: string): Promise<AuthTokens> {
+  const response = await fetch(`${env.apiUrl}/auth/refresh`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ refreshToken }),
+  });
+  return parseJsonOrThrow(response) as Promise<AuthTokens>;
+}
+
+export async function logout(refreshToken: string): Promise<void> {
+  await fetch(`${env.apiUrl}/auth/logout`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ refreshToken }),
+  });
+  // Logout é tratado como best-effort no cliente: mesmo que a chamada
+  // falhe (ex: sem rede), a sessão local é limpa de qualquer forma.
+}
+
+export async function getMe(accessToken: string): Promise<User> {
+  const response = await fetch(`${env.apiUrl}/users/me`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  return parseJsonOrThrow(response) as Promise<User>;
 }

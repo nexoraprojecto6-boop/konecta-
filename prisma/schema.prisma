@@ -1,9 +1,10 @@
 // ==================================================
-// KONECTA - Prisma Schema (Fase 1 - Fundação)
+// KONECTA - Prisma Schema
 // ==================================================
-// Nesta fase não há models de negócio.
-// Apenas a configuração base do datasource e do generator,
-// incluindo a extensão PostGIS para uso futuro em localização.
+// Fase 1: apenas configuração base do datasource e do generator.
+// Fase 2: adicionado o model User (autenticação + cadastro básico).
+// A extensão PostGIS permanece habilitada para uso futuro em localização,
+// mas nenhum campo de localização foi adicionado ao model User nesta fase.
 
 generator client {
   provider        = "prisma-client-js"
@@ -14,4 +15,19 @@ datasource db {
   provider   = "postgresql"
   url        = env("DATABASE_URL")
   extensions = [postgis]
+}
+
+/// Usuário da plataforma. Fase 2: apenas os campos essenciais para
+/// autenticação e identificação básica. Nenhum campo de localização,
+/// telefone/OTP, endereço, role ou permissão foi incluído nesta fase.
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  region       String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("users")
 }

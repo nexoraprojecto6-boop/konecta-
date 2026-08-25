@@ -1,4 +1,5 @@
 import React from "react";
+import { AuthProvider } from "../context/AuthContext";
 
 export const metadata = {
   title: "KONECTA Admin",
@@ -12,7 +13,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt">
-      <body>{children}</body>
+      <body>
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   );
 }
