@@ -18,9 +18,9 @@
     "dev:mobile": "pnpm --filter @konecta/mobile start",
     "lint": "pnpm -r --if-present lint",
     "build": "pnpm -r --if-present build",
-    "prisma:generate": "cd apps/api && pnpm exec prisma generate --schema=../../prisma/schema.prisma",
-    "prisma:migrate:dev": "cd apps/api && pnpm exec prisma migrate dev --schema=../../prisma/schema.prisma",
-    "prisma:studio": "cd apps/api && pnpm exec prisma studio --schema=../../prisma/schema.prisma",
+    "prisma:generate": "pnpm --filter @konecta/api exec prisma generate --schema=../../prisma/schema.prisma",
+    "prisma:migrate:dev": "pnpm --filter @konecta/api exec prisma migrate dev --schema=../../prisma/schema.prisma",
+    "prisma:studio": "pnpm --filter @konecta/api exec prisma studio --schema=../../prisma/schema.prisma",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down"
   },
