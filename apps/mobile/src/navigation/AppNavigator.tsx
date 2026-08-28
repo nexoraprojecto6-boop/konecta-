@@ -9,6 +9,7 @@ import { useAuth } from "../context/AuthContext";
 import { LoginScreen } from "../screens/Auth/LoginScreen";
 import { RegisterScreen } from "../screens/Auth/RegisterScreen";
 import { HomeScreen } from "../screens/Home/HomeScreen";
+import { ProfileScreen } from "../screens/Profile/ProfileScreen";
 
 export type AuthStackParamList = {
   Login: undefined;
@@ -17,6 +18,7 @@ export type AuthStackParamList = {
 
 export type RootStackParamList = {
   Home: undefined;
+  Profile: undefined;
 };
 
 export type AuthScreenProps = NativeStackScreenProps<AuthStackParamList>;
@@ -35,8 +37,17 @@ function AuthNavigator() {
 
 function AppStack() {
   return (
-    <RootStack.Navigator screenOptions={{ headerShown: false }}>
-      <RootStack.Screen name="Home" component={HomeScreen} />
+    <RootStack.Navigator>
+      <RootStack.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{ headerShown: false }}
+      />
+      <RootStack.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{ title: "Meu perfil" }}
+      />
     </RootStack.Navigator>
   );
 }

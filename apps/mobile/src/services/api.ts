@@ -5,6 +5,9 @@ import type {
   RegisterPayload,
   LoginPayload,
   User,
+  UserLocation,
+  UpdateProfilePayload,
+  UpdateLocationPayload,
 } from "@konecta/types";
 import { env } from "../config/env";
 
@@ -80,4 +83,51 @@ export async function getMe(accessToken: string): Promise<User> {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   return parseJsonOrThrow(response) as Promise<User>;
+}
+
+export async function updateProfile(
+  accessToken: string,
+  payload: UpdateProfilePayload,
+): Promise<User> {
+  const response = await fetch(`${env.apiUrl}/users/me`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  return parseJsonOrThrow(response) as Promise<User>;
+}
+
+export async function getMyLocation(accessToken: string): Promise<UserLocation> {
+  const response = await fetch(`${env.apiUrl}/users/me/location`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  return parseJsonOrThrow(response) as Promise<UserLocation>;
+}
+
+export async function updateMyLocation(
+  accessToken: string,
+  payload: UpdateLocationPayload,
+): Promise<UserLocation> {
+  const response = await fetch(`${env.apiUrl}/users/me/location`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  return parseJsonOrThrow(response) as Promise<UserLocation>;
+}
+
+export async function deleteMyLocation(accessToken: string): Promise<void> {
+  const response = await fetch(`${env.apiUrl}/users/me/location`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!response.ok) {
+    throw new Error(`Falha ao remover localização: ${response.status}`);
+  }
 }

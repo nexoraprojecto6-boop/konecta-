@@ -3,12 +3,13 @@
 // ==================================================
 // Fase 1: apenas configuração base do datasource e do generator.
 // Fase 2: adicionado o model User (autenticação + cadastro básico).
-// A extensão PostGIS permanece habilitada para uso futuro em localização,
-// mas nenhum campo de localização foi adicionado ao model User nesta fase.
+// Fase 3: adicionado o model UserLocation (perfil + localização básica).
+// A extensão PostGIS permanece habilitada para localização; nesta fase
+// apenas armazenamos o dado, sem nenhuma busca por proximidade.
 
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["postgresqlExtensions"]
+  previewFeatures = ["postgresqlExtensions", "extendedIndexes"]
 }
 
 datasource db {
@@ -29,5 +30,31 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  location UserLocation?
+
   @@map("users")
+}
+
+/// Localização básica do usuário (Fase 3). Relação 1:1 opcional com User:
+/// nem todo usuário informa localização. O país já é representado por
+/// User.region ("AO"/"MZ") — aqui ficam apenas os níveis mais granulares
+/// (província/cidade) e, opcionalmente, o ponto geográfico (GPS).
+/// Nenhuma busca por proximidade é implementada nesta fase; o índice
+/// espacial existe apenas porque o dado geométrico já existe.
+model UserLocation {
+  userId String @id
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  province String
+  city     String
+
+  /// Ponto geográfico (longitude, latitude), SRID 4326 (WGS84 — padrão GPS).
+  /// Tipo não suportado nativamente pelo Prisma Client: leitura e escrita
+  /// são feitas via SQL cru (ST_MakePoint / ST_X / ST_Y) no UsersService.
+  geoLocation Unsupported("geometry(Point, 4326)")?
+
+  updatedAt DateTime @updatedAt
+
+  @@index([geoLocation], type: Gist)
+  @@map("user_locations")
 }

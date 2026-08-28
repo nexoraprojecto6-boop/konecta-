@@ -58,3 +58,37 @@ export const logoutSchema = z.object({
   refreshToken: z.string().min(1, "refreshToken é obrigatório"),
 });
 export type LogoutInput = z.infer<typeof logoutSchema>;
+
+/**
+ * Fase 3 — perfil e localização básica.
+ */
+
+export const updateProfileSchema = z
+  .object({
+    name: z.string().min(1, "Nome não pode ser vazio").optional(),
+    region: z.enum(APP_REGIONS).optional(),
+  })
+  .refine((data) => data.name !== undefined || data.region !== undefined, {
+    message: "Informe ao menos um campo para atualizar",
+  });
+export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+
+export const updateLocationSchema = z
+  .object({
+    province: z.string().min(1, "Província não pode ser vazia").optional(),
+    city: z.string().min(1, "Cidade não pode ser vazia").optional(),
+    latitude: z.number().min(-90).max(90).optional(),
+    longitude: z.number().min(-180).max(180).optional(),
+  })
+  .refine(
+    (data) => (data.latitude === undefined) === (data.longitude === undefined),
+    { message: "latitude e longitude devem ser enviadas juntas" },
+  )
+  .refine(
+    (data) =>
+      data.province !== undefined ||
+      data.city !== undefined ||
+      data.latitude !== undefined,
+    { message: "Informe ao menos um campo para atualizar" },
+  );
+export type UpdateLocationInput = z.infer<typeof updateLocationSchema>;
