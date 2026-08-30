@@ -8,6 +8,13 @@ import type {
   UserLocation,
   UpdateProfilePayload,
   UpdateLocationPayload,
+  Category,
+  ProfessionalProfile,
+  UpsertProfessionalProfilePayload,
+  Company,
+  Service,
+  DiscoverySearchParams,
+  DiscoverySearchResponse,
 } from "@konecta/types";
 import { env } from "../config/env";
 
@@ -130,4 +137,82 @@ export async function deleteMyLocation(accessToken: string): Promise<void> {
   if (!response.ok) {
     throw new Error(`Falha ao remover localização: ${response.status}`);
   }
+}
+
+/**
+ * Fase 4 — KONECTA Discovery.
+ */
+
+export async function listCategories(): Promise<Category[]> {
+  const response = await fetch(`${env.apiUrl}/categories`);
+  return parseJsonOrThrow(response) as Promise<Category[]>;
+}
+
+export async function searchDiscovery(
+  params: DiscoverySearchParams,
+): Promise<DiscoverySearchResponse> {
+  const query = new URLSearchParams();
+  query.set("lat", String(params.lat));
+  query.set("lng", String(params.lng));
+  if (params.q) query.set("q", params.q);
+  if (params.radiusKm) query.set("radiusKm", String(params.radiusKm));
+  if (params.categoryId) query.set("categoryId", params.categoryId);
+  if (params.page) query.set("page", String(params.page));
+  if (params.limit) query.set("limit", String(params.limit));
+
+  const response = await fetch(`${env.apiUrl}/discovery/search?${query.toString()}`);
+  return parseJsonOrThrow(response) as Promise<DiscoverySearchResponse>;
+}
+
+export async function getProfessionalProfile(
+  userId: string,
+): Promise<ProfessionalProfile> {
+  const response = await fetch(`${env.apiUrl}/professionals/${userId}`);
+  return parseJsonOrThrow(response) as Promise<ProfessionalProfile>;
+}
+
+export async function getCompanyProfile(id: string): Promise<Company> {
+  const response = await fetch(`${env.apiUrl}/companies/${id}`);
+  return parseJsonOrThrow(response) as Promise<Company>;
+}
+
+export async function listServicesByOwner(params: {
+  professionalProfileId?: string;
+  companyId?: string;
+}): Promise<Service[]> {
+  const query = new URLSearchParams();
+  if (params.professionalProfileId) {
+    query.set("professionalProfileId", params.professionalProfileId);
+  }
+  if (params.companyId) query.set("companyId", params.companyId);
+
+  const response = await fetch(`${env.apiUrl}/services?${query.toString()}`);
+  return parseJsonOrThrow(response) as Promise<Service[]>;
+}
+
+export async function getMyProfessionalProfile(
+  accessToken: string,
+): Promise<ProfessionalProfile | null> {
+  const response = await fetch(`${env.apiUrl}/professionals/me`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (response.status === 404) {
+    return null;
+  }
+  return parseJsonOrThrow(response) as Promise<ProfessionalProfile>;
+}
+
+export async function activateProfessionalProfile(
+  accessToken: string,
+  payload: UpsertProfessionalProfilePayload,
+): Promise<ProfessionalProfile> {
+  const response = await fetch(`${env.apiUrl}/professionals/me`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  return parseJsonOrThrow(response) as Promise<ProfessionalProfile>;
 }

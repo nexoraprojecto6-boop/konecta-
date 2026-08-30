@@ -33,12 +33,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException();
     }
 
-    // Nunca repassar passwordHash adiante, nem para o objeto `request.user`.
+    // Nunca repassar passwordHash adiante. isAdmin é intencionalmente
+    // incluído (Fase 4) — é o próprio usuário vendo seu próprio status.
     return {
       id: user.id,
       email: user.email,
       name: user.name,
       region: user.region,
+      isAdmin: user.isAdmin,
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
     };

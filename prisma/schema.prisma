@@ -4,8 +4,9 @@
 // Fase 1: apenas configuração base do datasource e do generator.
 // Fase 2: adicionado o model User (autenticação + cadastro básico).
 // Fase 3: adicionado o model UserLocation (perfil + localização básica).
-// A extensão PostGIS permanece habilitada para localização; nesta fase
-// apenas armazenamos o dado, sem nenhuma busca por proximidade.
+// Fase 4: adicionados Category, ProfessionalProfile, Company,
+// CompanyMember e Service (fundação do KONECTA Discovery).
+// A extensão PostGIS permanece habilitada para localização.
 
 generator client {
   provider        = "prisma-client-js"
@@ -27,20 +28,24 @@ model User {
   passwordHash String
   name         String
   region       String
+  /// Flag mínima de administrador da plataforma (Fase 4). NÃO é um
+  /// sistema de roles/permissões — apenas o primitivo necessário para
+  /// distinguir "administrador do KONECTA" de "dono de uma empresa"
+  /// (ex: só admin pode marcar uma empresa como VERIFIED).
+  isAdmin      Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  location UserLocation?
+  location            UserLocation?
+  professionalProfile ProfessionalProfile?
+  companyMemberships  CompanyMember[]
 
   @@map("users")
 }
 
-/// Localização básica do usuário (Fase 3). Relação 1:1 opcional com User:
-/// nem todo usuário informa localização. O país já é representado por
-/// User.region ("AO"/"MZ") — aqui ficam apenas os níveis mais granulares
-/// (província/cidade) e, opcionalmente, o ponto geográfico (GPS).
-/// Nenhuma busca por proximidade é implementada nesta fase; o índice
-/// espacial existe apenas porque o dado geométrico já existe.
+/// Localização básica do usuário (Fase 3) — perfil pessoal.
+/// NÃO é reaproveitada para localização profissional/empresarial:
+/// onde alguém mora e onde presta serviço são conceitos diferentes.
 model UserLocation {
   userId String @id
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -49,12 +54,158 @@ model UserLocation {
   city     String
 
   /// Ponto geográfico (longitude, latitude), SRID 4326 (WGS84 — padrão GPS).
-  /// Tipo não suportado nativamente pelo Prisma Client: leitura e escrita
-  /// são feitas via SQL cru (ST_MakePoint / ST_X / ST_Y) no UsersService.
   geoLocation Unsupported("geometry(Point, 4326)")?
 
   updatedAt DateTime @updatedAt
 
   @@index([geoLocation], type: Gist)
   @@map("user_locations")
+}
+
+/// Categoria de serviço, hierárquica (categoria pai/filha). Dados
+/// administráveis via Admin — nunca hardcoded no código (Fase 4).
+model Category {
+  id          String     @id @default(uuid())
+  name        String
+  slug        String     @unique
+  description String?
+  icon        String?
+
+  parentId String?
+  parent   Category?  @relation("CategoryChildren", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryChildren")
+
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  services Service[]
+  companies Company[]
+
+  @@index([parentId])
+  @@map("categories")
+}
+
+/// Atuação profissional de um usuário (Fase 4). Relação 1:1 opcional
+/// com User: nem todo usuário é profissional. Um usuário "ativa" sua
+/// atuação profissional criando este registro — não duplica os dados
+/// básicos do User (nome, email já vêm de lá).
+///
+/// Localização própria (onde o profissional presta serviço), separada
+/// da UserLocation (onde a pessoa mora) por decisão explícita da Fase 4:
+/// podem coincidir, mas não são o mesmo conceito.
+model ProfessionalProfile {
+  userId String @id
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  profession String
+  bio        String?
+  radiusKm   Int     @default(10)
+
+  phone    String?
+  whatsapp String?
+
+  province String?
+  city     String?
+
+  /// Ponto geográfico (longitude, latitude), SRID 4326.
+  geoLocation Unsupported("geometry(Point, 4326)")?
+
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  services Service[]
+
+  @@index([geoLocation], type: Gist)
+  @@map("professional_profiles")
+}
+
+/// Status de verificação empresarial (Fase 4). Uma empresa nunca nasce
+/// verificada — a verificação é uma ação administrativa futura.
+enum CompanyVerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+/// Empresa (Fase 4): entidade independente, não uma extensão de
+/// ProfessionalProfile. Pode ter múltiplos administradores no futuro
+/// via CompanyMember (nesta fase, sempre exatamente um "owner").
+model Company {
+  id         String  @id @default(uuid())
+  tradeName  String
+  legalName  String
+  taxId      String? @unique
+
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id])
+
+  phone    String?
+  whatsapp String?
+
+  province String?
+  city     String?
+
+  /// Ponto geográfico (longitude, latitude), SRID 4326.
+  geoLocation Unsupported("geometry(Point, 4326)")?
+
+  verificationStatus CompanyVerificationStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members  CompanyMember[]
+  services Service[]
+
+  @@index([geoLocation], type: Gist)
+  @@index([categoryId])
+  @@map("companies")
+}
+
+/// Relação usuário-empresa (Fase 4). Nesta fase, sempre role="owner"
+/// (um único administrador por empresa), mas a estrutura já permite
+/// múltiplos membros com papéis diferentes no futuro sem migration
+/// destrutiva.
+model CompanyMember {
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  role String @default("owner")
+
+  createdAt DateTime @default(now())
+
+  @@id([companyId, userId])
+  @@map("company_members")
+}
+
+/// Serviço oferecido por um profissional OU por uma empresa (nunca os
+/// dois, nunca nenhum). A regra é validada em duas camadas: aplicação
+/// (ServicesService) e banco (CHECK constraint criada manualmente na
+/// migration, já que o Prisma não expressa XOR nativamente no schema).
+model Service {
+  id          String  @id @default(uuid())
+  name        String
+  description String?
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  professionalProfileId String?
+  professionalProfile   ProfessionalProfile? @relation(fields: [professionalProfileId], references: [userId], onDelete: Cascade)
+
+  companyId String?
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([categoryId])
+  @@index([professionalProfileId])
+  @@index([companyId])
+  @@map("services")
 }

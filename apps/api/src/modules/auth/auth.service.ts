@@ -202,6 +202,7 @@ export class AuthService {
     email: string;
     name: string;
     region: string;
+    isAdmin: boolean;
     createdAt: Date;
     updatedAt: Date;
   }): User {
@@ -210,6 +211,7 @@ export class AuthService {
       email: user.email,
       name: user.name,
       region: user.region,
+      isAdmin: user.isAdmin,
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
     };

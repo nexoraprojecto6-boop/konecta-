@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { APP_REGIONS } from "@konecta/config";
+import {
+  APP_REGIONS,
+  COMPANY_VERIFICATION_STATUSES,
+  MAX_DISCOVERY_RADIUS_KM,
+  DEFAULT_DISCOVERY_RADIUS_KM,
+} from "@konecta/config";
 
 /**
  * Schemas de validação compartilhados.
@@ -92,3 +97,166 @@ export const updateLocationSchema = z
     { message: "Informe ao menos um campo para atualizar" },
   );
 export type UpdateLocationInput = z.infer<typeof updateLocationSchema>;
+
+/**
+ * Fase 4 — KONECTA Discovery (categorias, profissionais, empresas,
+ * serviços, busca por proximidade).
+ */
+
+export const createCategorySchema = z.object({
+  name: z.string().min(1, "Nome é obrigatório"),
+  slug: z
+    .string()
+    .min(1, "Slug é obrigatório")
+    .regex(/^[a-z0-9-]+$/, "Slug deve conter apenas letras minúsculas, números e hífen"),
+  description: z.string().optional(),
+  icon: z.string().optional(),
+  parentId: z.string().uuid().optional(),
+});
+export type CreateCategoryInput = z.infer<typeof createCategorySchema>;
+
+export const updateCategorySchema = z
+  .object({
+    name: z.string().min(1).optional(),
+    description: z.string().optional(),
+    icon: z.string().optional(),
+    parentId: z.string().uuid().nullable().optional(),
+    active: z.boolean().optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: "Informe ao menos um campo para atualizar",
+  });
+export type UpdateCategoryInput = z.infer<typeof updateCategorySchema>;
+
+export const upsertProfessionalProfileSchema = z.object({
+  profession: z.string().min(1, "Profissão é obrigatória"),
+  bio: z.string().max(500).optional(),
+  radiusKm: z.number().int().min(1).max(100).optional(),
+  phone: z.string().min(1).optional(),
+  whatsapp: z.string().min(1).optional(),
+  province: z.string().min(1).optional(),
+  city: z.string().min(1).optional(),
+  latitude: z.number().min(-90).max(90).optional(),
+  longitude: z.number().min(-180).max(180).optional(),
+}).refine(
+  (data) => (data.latitude === undefined) === (data.longitude === undefined),
+  { message: "latitude e longitude devem ser enviadas juntas" },
+);
+export type UpsertProfessionalProfileInput = z.infer<
+  typeof upsertProfessionalProfileSchema
+>;
+
+export const updateProfessionalProfileSchema = z
+  .object({
+    profession: z.string().min(1).optional(),
+    bio: z.string().max(500).optional(),
+    radiusKm: z.number().int().min(1).max(100).optional(),
+    phone: z.string().min(1).optional(),
+    whatsapp: z.string().min(1).optional(),
+    province: z.string().min(1).optional(),
+    city: z.string().min(1).optional(),
+    latitude: z.number().min(-90).max(90).optional(),
+    longitude: z.number().min(-180).max(180).optional(),
+  })
+  .refine(
+    (data) => (data.latitude === undefined) === (data.longitude === undefined),
+    { message: "latitude e longitude devem ser enviadas juntas" },
+  )
+  .refine((data) => Object.keys(data).length > 0, {
+    message: "Informe ao menos um campo para atualizar",
+  });
+export type UpdateProfessionalProfileInput = z.infer<
+  typeof updateProfessionalProfileSchema
+>;
+
+export const createCompanySchema = z.object({
+  tradeName: z.string().min(1, "Nome comercial é obrigatório"),
+  legalName: z.string().min(1, "Nome legal é obrigatório"),
+  taxId: z.string().min(1).optional(),
+  categoryId: z.string().uuid().optional(),
+  phone: z.string().min(1).optional(),
+  whatsapp: z.string().min(1).optional(),
+  province: z.string().min(1).optional(),
+  city: z.string().min(1).optional(),
+  latitude: z.number().min(-90).max(90).optional(),
+  longitude: z.number().min(-180).max(180).optional(),
+}).refine(
+  (data) => (data.latitude === undefined) === (data.longitude === undefined),
+  { message: "latitude e longitude devem ser enviadas juntas" },
+);
+export type CreateCompanyInput = z.infer<typeof createCompanySchema>;
+
+export const updateCompanySchema = z
+  .object({
+    tradeName: z.string().min(1).optional(),
+    legalName: z.string().min(1).optional(),
+    taxId: z.string().min(1).optional(),
+    categoryId: z.string().uuid().optional(),
+    phone: z.string().min(1).optional(),
+    whatsapp: z.string().min(1).optional(),
+    province: z.string().min(1).optional(),
+    city: z.string().min(1).optional(),
+    latitude: z.number().min(-90).max(90).optional(),
+    longitude: z.number().min(-180).max(180).optional(),
+  })
+  .refine(
+    (data) => (data.latitude === undefined) === (data.longitude === undefined),
+    { message: "latitude e longitude devem ser enviadas juntas" },
+  )
+  .refine((data) => Object.keys(data).length > 0, {
+    message: "Informe ao menos um campo para atualizar",
+  });
+export type UpdateCompanyInput = z.infer<typeof updateCompanySchema>;
+
+export const updateCompanyVerificationSchema = z.object({
+  verificationStatus: z.enum(COMPANY_VERIFICATION_STATUSES),
+});
+export type UpdateCompanyVerificationInput = z.infer<
+  typeof updateCompanyVerificationSchema
+>;
+
+export const createServiceSchema = z
+  .object({
+    name: z.string().min(1, "Nome do serviço é obrigatório"),
+    description: z.string().max(500).optional(),
+    categoryId: z.string().uuid("categoryId inválido"),
+    professionalProfileId: z.string().uuid().optional(),
+    companyId: z.string().uuid().optional(),
+  })
+  .refine(
+    (data) =>
+      (data.professionalProfileId !== undefined) !==
+      (data.companyId !== undefined),
+    {
+      message:
+        "Informe exatamente um proprietário: professionalProfileId OU companyId",
+    },
+  );
+export type CreateServiceInput = z.infer<typeof createServiceSchema>;
+
+export const updateServiceSchema = z
+  .object({
+    name: z.string().min(1).optional(),
+    description: z.string().max(500).optional(),
+    categoryId: z.string().uuid().optional(),
+    active: z.boolean().optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: "Informe ao menos um campo para atualizar",
+  });
+export type UpdateServiceInput = z.infer<typeof updateServiceSchema>;
+
+export const discoverySearchSchema = z.object({
+  q: z.string().trim().min(1).optional(),
+  lat: z.coerce.number().min(-90).max(90),
+  lng: z.coerce.number().min(-180).max(180),
+  radiusKm: z.coerce
+    .number()
+    .min(1)
+    .max(MAX_DISCOVERY_RADIUS_KM)
+    .default(DEFAULT_DISCOVERY_RADIUS_KM),
+  categoryId: z.string().uuid().optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+});
+export type DiscoverySearchInput = z.infer<typeof discoverySearchSchema>;

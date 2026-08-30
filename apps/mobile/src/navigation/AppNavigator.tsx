@@ -10,6 +10,11 @@ import { LoginScreen } from "../screens/Auth/LoginScreen";
 import { RegisterScreen } from "../screens/Auth/RegisterScreen";
 import { HomeScreen } from "../screens/Home/HomeScreen";
 import { ProfileScreen } from "../screens/Profile/ProfileScreen";
+import { DiscoverySearchScreen } from "../screens/Discovery/DiscoverySearchScreen";
+import { DiscoveryResultsScreen } from "../screens/Discovery/DiscoveryResultsScreen";
+import { ProfessionalPublicScreen } from "../screens/Professional/ProfessionalPublicScreen";
+import { CompanyPublicScreen } from "../screens/Company/CompanyPublicScreen";
+import { ActivateProfessionalScreen } from "../screens/Professional/ActivateProfessionalScreen";
 
 export type AuthStackParamList = {
   Login: undefined;
@@ -19,6 +24,16 @@ export type AuthStackParamList = {
 export type RootStackParamList = {
   Home: undefined;
   Profile: undefined;
+  Discovery: undefined;
+  DiscoveryResults: {
+    q?: string;
+    lat: number;
+    lng: number;
+    radiusKm: number;
+  };
+  ProfessionalPublic: { userId: string };
+  CompanyPublic: { id: string };
+  ActivateProfessional: undefined;
 };
 
 export type AuthScreenProps = NativeStackScreenProps<AuthStackParamList>;
@@ -47,6 +62,31 @@ function AppStack() {
         name="Profile"
         component={ProfileScreen}
         options={{ title: "Meu perfil" }}
+      />
+      <RootStack.Screen
+        name="Discovery"
+        component={DiscoverySearchScreen}
+        options={{ title: "O que você precisa?" }}
+      />
+      <RootStack.Screen
+        name="DiscoveryResults"
+        component={DiscoveryResultsScreen}
+        options={{ title: "Resultados próximos" }}
+      />
+      <RootStack.Screen
+        name="ProfessionalPublic"
+        component={ProfessionalPublicScreen}
+        options={{ title: "Profissional" }}
+      />
+      <RootStack.Screen
+        name="CompanyPublic"
+        component={CompanyPublicScreen}
+        options={{ title: "Empresa" }}
+      />
+      <RootStack.Screen
+        name="ActivateProfessional"
+        component={ActivateProfessionalScreen}
+        options={{ title: "Oferecer serviços" }}
       />
     </RootStack.Navigator>
   );

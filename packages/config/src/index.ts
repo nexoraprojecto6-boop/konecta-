@@ -45,3 +45,24 @@ export const PROVINCES: Record<AppRegion, string[]> = {
     "Zambézia",
   ],
 };
+
+/**
+ * Fase 4 — KONECTA Discovery.
+ */
+
+export const COMPANY_VERIFICATION_STATUSES = [
+  "PENDING",
+  "VERIFIED",
+  "REJECTED",
+] as const;
+export type CompanyVerificationStatus =
+  (typeof COMPANY_VERIFICATION_STATUSES)[number];
+
+/** Raio padrão de atuação de um profissional, em km. */
+export const DEFAULT_PROFESSIONAL_RADIUS_KM = 10;
+
+/** Raio máximo de busca do Discovery, em km — evita queries custosas demais. */
+export const MAX_DISCOVERY_RADIUS_KM = 50;
+
+/** Raio padrão de busca do Discovery quando o cliente não especificar. */
+export const DEFAULT_DISCOVERY_RADIUS_KM = 10;
