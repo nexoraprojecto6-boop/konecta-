@@ -5,13 +5,20 @@
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.konecta.app"
     },
     "android": {
       "package": "com.konecta.app"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "829bd1e2-cf13-47bf-871f-3d18a387ab8f"
+      }
     }
   }
 }
