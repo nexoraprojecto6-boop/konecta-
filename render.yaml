@@ -1,0 +1,40 @@
+databases:
+  - name: konecta-postgres
+    plan: free
+    databaseName: konecta
+    user: konecta
+
+services:
+  - type: keyvalue
+    name: konecta-redis
+    plan: free
+    ipAllowList: []
+
+  - type: web
+    name: konecta-api
+    runtime: docker
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: .
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: konecta-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: konecta-redis
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_ACCESS_TTL
+        value: 15m
+      - key: JWT_REFRESH_TTL
+        value: 7d
+      - key: CORS_ORIGIN
+        sync: false
