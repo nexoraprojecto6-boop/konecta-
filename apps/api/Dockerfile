@@ -6,7 +6,7 @@ RUN corepack enable && corepack prepare pnpm@8.15.0 --activate
 WORKDIR /repo
 
 FROM base AS deps
-COPY .npmrc pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY .npmrc pnpm-workspace.yaml pnpm-lock.yaml package.json tsconfig.base.json ./
 COPY packages/config/package.json packages/config/
 COPY packages/types/package.json packages/types/
 COPY packages/validation/package.json packages/validation/
@@ -30,7 +30,7 @@ RUN corepack enable && corepack prepare pnpm@8.15.0 --activate
 WORKDIR /repo
 ENV NODE_ENV=production
 
-COPY --from=build /repo/.npmrc /repo/pnpm-workspace.yaml /repo/pnpm-lock.yaml /repo/package.json ./
+COPY --from=build /repo/.npmrc /repo/pnpm-workspace.yaml /repo/pnpm-lock.yaml /repo/package.json /repo/tsconfig.base.json ./
 COPY --from=build /repo/packages ./packages
 COPY --from=build /repo/prisma ./prisma
 COPY --from=build /repo/apps/api ./apps/api
