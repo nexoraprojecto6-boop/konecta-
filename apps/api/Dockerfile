@@ -12,7 +12,7 @@ COPY packages/types/package.json packages/types/
 COPY packages/validation/package.json packages/validation/
 COPY packages/eslint-config/package.json packages/eslint-config/
 COPY apps/api/package.json apps/api/
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --no-frozen-lockfile
 
 FROM deps AS build
 COPY packages ./packages
@@ -34,7 +34,7 @@ COPY --from=build /repo/.npmrc /repo/pnpm-workspace.yaml /repo/pnpm-lock.yaml /r
 COPY --from=build /repo/packages ./packages
 COPY --from=build /repo/prisma ./prisma
 COPY --from=build /repo/apps/api ./apps/api
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --no-frozen-lockfile
 RUN chmod +x apps/api/docker-entrypoint.sh
 
 EXPOSE 3000
