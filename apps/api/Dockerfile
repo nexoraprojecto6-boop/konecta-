@@ -1,4 +1,7 @@
 FROM node:20-slim AS base
+RUN apt-get update -y && \
+    apt-get install -y --no-install-recommends python3 make g++ openssl && \
+    rm -rf /var/lib/apt/lists/*
 RUN corepack enable && corepack prepare pnpm@8.15.0 --activate
 WORKDIR /repo
 
@@ -20,6 +23,9 @@ RUN pnpm --filter @konecta/api exec prisma generate --schema=../../prisma/schema
 RUN pnpm --filter @konecta/api build
 
 FROM node:20-slim AS runtime
+RUN apt-get update -y && \
+    apt-get install -y --no-install-recommends python3 make g++ openssl && \
+    rm -rf /var/lib/apt/lists/*
 RUN corepack enable && corepack prepare pnpm@8.15.0 --activate
 WORKDIR /repo
 ENV NODE_ENV=production
