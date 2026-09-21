@@ -30,11 +30,5 @@
     "prettier": "^3.3.3",
     "prisma": "^5.18.0",
     "typescript": "^5.5.4"
-  },
-  "pnpm": {
-    "overrides": {
-      "react": "18.2.0",
-      "react-dom": "18.2.0"
-    }
   }
 }
