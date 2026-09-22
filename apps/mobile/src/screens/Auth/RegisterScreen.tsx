@@ -3,14 +3,19 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
+  Pressable,
   StyleSheet,
   ActivityIndicator,
+  ScrollView,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { APP_REGIONS, type AppRegion } from "@konecta/config";
 import type { AuthStackParamList } from "../../navigation/AppNavigator";
 import { useAuth } from "../../context/AuthContext";
+import { KonectaLogo } from "../../components/KonectaLogo";
+import { colors, fonts, radius, heroGradient } from "../../theme/tokens";
 
 type Props = NativeStackScreenProps<AuthStackParamList, "Register">;
 
@@ -36,108 +41,111 @@ export function RegisterScreen({ navigation }: Props) {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Criar conta</Text>
+    <View style={styles.screen}>
+      <LinearGradient colors={heroGradient} style={styles.header}>
+        <Pressable onPress={() => navigation.navigate("Login")} hitSlop={12} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={22} color={colors.white} />
+        </Pressable>
+        <KonectaLogo white size="sm" />
+      </LinearGradient>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Nome"
-        value={name}
-        onChangeText={setName}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        autoCapitalize="none"
-        keyboardType="email-address"
-        value={email}
-        onChangeText={setEmail}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Senha (mín. 8 caracteres, 1 letra e 1 número)"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
+      <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+        <Text style={styles.title}>Criar conta</Text>
+        <Text style={styles.subtitle}>Junte-se a milhares de pessoas e profissionais.</Text>
 
-      <View style={styles.regionRow}>
-        {APP_REGIONS.map((r) => (
-          <TouchableOpacity
-            key={r}
-            style={[
-              styles.regionOption,
-              region === r && styles.regionOptionSelected,
-            ]}
-            onPress={() => setRegion(r)}
-          >
-            <Text
-              style={
-                region === r ? styles.regionTextSelected : styles.regionText
-              }
-            >
-              {r === "AO" ? "Angola" : "Moçambique"}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+        <View style={styles.form}>
+          <TextInput style={styles.input} placeholder="Nome" placeholderTextColor={colors.muted} value={name} onChangeText={setName} />
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            placeholderTextColor={colors.muted}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Senha (mín. 8 caracteres, 1 letra e 1 número)"
+            placeholderTextColor={colors.muted}
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+          />
 
-      {formError && <Text style={styles.error}>{formError}</Text>}
+          <View style={styles.regionRow}>
+            {APP_REGIONS.map((r) => (
+              <Pressable
+                key={r}
+                style={[styles.regionOption, region === r && styles.regionOptionSelected]}
+                onPress={() => setRegion(r)}
+              >
+                <Text style={region === r ? styles.regionTextSelected : styles.regionText}>
+                  {r === "AO" ? "Angola" : "Moçambique"}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={handleSubmit}
-        disabled={submitting}
-      >
-        {submitting ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Cadastrar</Text>
-        )}
-      </TouchableOpacity>
+        {formError && <Text style={styles.error}>{formError}</Text>}
 
-      <TouchableOpacity onPress={() => navigation.navigate("Login")}>
-        <Text style={styles.link}>Já tem conta? Entrar</Text>
-      </TouchableOpacity>
+        <Pressable style={styles.button} onPress={handleSubmit} disabled={submitting}>
+          {submitting ? <ActivityIndicator color={colors.white} /> : <Text style={styles.buttonText}>Criar conta</Text>}
+        </Pressable>
+
+        <Pressable onPress={() => navigation.navigate("Login")} style={styles.linkRow}>
+          <Text style={styles.linkText}>
+            Já tem conta? <Text style={styles.linkTextBold}>Entrar</Text>
+          </Text>
+        </Pressable>
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", padding: 24 },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 24,
-  },
+  screen: { flex: 1, backgroundColor: "#F7F9FD" },
+  header: { height: 120, flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 20, paddingBottom: 20 },
+  backButton: { padding: 4 },
+  body: { padding: 24, paddingTop: 24, gap: 4, paddingBottom: 48 },
+  title: { color: colors.ink, fontSize: 22, fontFamily: fonts.extrabold },
+  subtitle: { color: colors.muted, fontSize: 13, fontFamily: fonts.regular, marginBottom: 8 },
+  form: { gap: 12, marginTop: 8 },
   input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 12,
+    borderWidth: 1.5,
+    borderColor: colors.line,
+    borderRadius: radius.md,
+    padding: 15,
+    fontSize: 14,
+    color: colors.ink,
+    backgroundColor: colors.white,
+    fontFamily: fonts.semibold,
   },
-  regionRow: { flexDirection: "row", gap: 8, marginBottom: 12 },
+  regionRow: { flexDirection: "row", gap: 8, marginTop: 2 },
   regionOption: {
     flex: 1,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 10,
+    borderWidth: 1.5,
+    borderColor: colors.line,
+    borderRadius: radius.md,
+    paddingVertical: 12,
     alignItems: "center",
+    backgroundColor: colors.white,
   },
-  regionOptionSelected: { backgroundColor: "#111", borderColor: "#111" },
-  regionText: { color: "#111" },
-  regionTextSelected: { color: "#fff" },
+  regionOptionSelected: { backgroundColor: colors.purple, borderColor: colors.purple },
+  regionText: { color: colors.ink, fontFamily: fonts.semibold, fontSize: 13 },
+  regionTextSelected: { color: colors.white, fontFamily: fonts.extrabold, fontSize: 13 },
   button: {
-    backgroundColor: "#111",
-    borderRadius: 8,
-    padding: 14,
+    height: 54,
+    borderRadius: radius.md,
+    backgroundColor: colors.purple,
     alignItems: "center",
-    marginTop: 8,
+    justifyContent: "center",
+    marginTop: 16,
   },
-  buttonText: { color: "#fff", fontWeight: "600" },
-  link: { textAlign: "center", marginTop: 16, color: "#111" },
-  error: { color: "#c0392b", marginBottom: 8 },
+  buttonText: { color: colors.white, fontSize: 15, fontFamily: fonts.extrabold },
+  linkRow: { marginTop: 16, alignItems: "center" },
+  linkText: { color: colors.muted, fontSize: 13, fontFamily: fonts.regular },
+  linkTextBold: { color: colors.purple, fontFamily: fonts.extrabold },
+  error: { color: "#c0392b", fontSize: 12, marginTop: 4, fontFamily: fonts.semibold },
 });
