@@ -9,7 +9,8 @@ async function bootstrap() {
 
   const corsOrigin = configService.get<string>("CORS_ORIGIN");
   if (corsOrigin) {
-    app.enableCors({ origin: corsOrigin });
+    const allowedOrigins = corsOrigin.split(",").map((origin) => origin.trim());
+    app.enableCors({ origin: allowedOrigins });
   }
 
   const port = configService.get<number>("PORT") ?? 3000;
