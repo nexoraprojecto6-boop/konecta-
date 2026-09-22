@@ -1,669 +1,378 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useState } from "react";
 import {
+  Alert,
+  Image,
+  ImageBackground,
+  Keyboard,
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
-  View,
-  TouchableOpacity,
-  ScrollView,
   TextInput,
-  Alert,
+  View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import type { Category } from "@konecta/types";
-import type { RootStackParamList } from "../../navigation/AppNavigator";
-import { useAuth } from "../../context/AuthContext";
-import * as api from "../../services/api";
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { useFonts } from "expo-font";
+import { Nunito_400Regular } from "@expo-google-fonts/nunito/400Regular";
+import { Nunito_600SemiBold } from "@expo-google-fonts/nunito/600SemiBold";
+import { Nunito_700Bold } from "@expo-google-fonts/nunito/700Bold";
+import { Nunito_800ExtraBold } from "@expo-google-fonts/nunito/800ExtraBold";
+import { Nunito_900Black } from "@expo-google-fonts/nunito/900Black";
 
-type Props = NativeStackScreenProps<RootStackParamList, "Home">;
+type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
 
-/**
- * Dados de feed são demonstrativos nesta fase: o KONECTA ainda não tem
- * um modelo de "publicações" (pedidos/ofertas) no backend — apenas
- * Category, ProfessionalProfile, Company e Service. Quando esse modelo
- * existir, esta lista passa a vir de api.listFeedPosts() ou equivalente.
- */
-type FeedPost = {
-  id: string;
-  name: string;
-  time: string;
-  place: string;
-  type: string;
-  offer?: boolean;
-  title: string;
-  desc: string;
-  tags: string[];
-  likes: number;
-  comments: number;
+const colors = {
+  ink: "#09235B",
+  blue: "#5173A9",
+  magenta: "#B30068",
+  pink: "#E4006B",
+  paper: "#F7F9FE",
 };
 
-const DEMO_POSTS: FeedPost[] = [
+const photos = {
+  hero: "https://images.unsplash.com/photo-1743172086091-b95acd708315?auto=format&fit=crop&w=1200&q=88",
+  carlos: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=160&q=85",
+  ana: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=160&q=85",
+  jorge: "https://images.unsplash.com/photo-1531384441138-2736e62e0919?auto=format&fit=crop&w=160&q=85",
+  electric: "https://images.unsplash.com/photo-1758101755915-462eddc23f57?auto=format&fit=crop&w=500&q=85",
+  design: "https://images.unsplash.com/photo-1519217651866-847339e674d4?auto=format&fit=crop&w=500&q=85",
+  mechanic: "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?auto=format&fit=crop&w=500&q=85",
+};
+
+const categories: { label: string; icon: IoniconName; warm?: boolean }[] = [
+  { label: "Serviços\nProfissionais", icon: "construct-outline" },
+  { label: "Empresas", icon: "business-outline" },
+  { label: "Produtos", icon: "cube-outline", warm: true },
+  { label: "Empregos", icon: "briefcase-outline" },
+  { label: "Transportes\ne Entregas", icon: "bus-outline" },
+  { label: "Casa e\nConstrução", icon: "home-outline", warm: true },
+  { label: "Saúde e\nBem-estar", icon: "heart-circle-outline" },
+];
+
+const posts = [
   {
-    id: "1",
     name: "Carlos Mendes",
     time: "30 min atrás",
     place: "Luanda - Maianga",
-    type: "Precisa de serviço",
     title: "Preciso de um eletricista urgente em casa.",
-    desc: "O disjuntor está a cair toda hora e preciso resolver ainda hoje.",
+    description: "O disjuntor está a cair toda hora e preciso resolver ainda hoje.",
+    service: "Precisa de serviço",
     tags: ["Eletricista", "Residencial", "Maianga"],
     likes: 12,
     comments: 8,
+    avatar: photos.carlos,
+    photo: photos.electric,
   },
   {
-    id: "2",
     name: "Ana Silva",
     time: "1 hora atrás",
     place: "Luanda - Talatona",
-    type: "Oferece serviço",
-    offer: true,
     title: "Design Gráfico | Logotipos, Flyers e Identidade Visual",
-    desc: "Trabalho com criação de logotipos, artes para redes sociais, flyers e muito mais. Qualidade, agilidade e preço justo!",
-    tags: ["Design Gráfico", "Marketing Digital", "Talatona"],
+    description: "Criação de logotipos, artes para redes sociais, flyers e muito mais.",
+    service: "Oferece serviço",
+    tags: ["Design Gráfico", "Marketing", "Talatona"],
     likes: 24,
     comments: 5,
+    avatar: photos.ana,
+    photo: photos.design,
   },
   {
-    id: "3",
     name: "Jorge Silva",
     time: "2 horas atrás",
     place: "Luanda - Kilamba",
-    type: "Precisa de serviço",
     title: "Procuro um mecânico de confiança",
-    desc: "Meu carro está a fazer um barulho estranho, alguém de confiança que possa dar uma olhada. Pode ser oficina ou profissional.",
+    description: "Meu carro está a fazer um barulho estranho. Preciso de uma avaliação.",
+    service: "Precisa de serviço",
     tags: ["Mecânica", "Automóveis", "Kilamba"],
     likes: 18,
     comments: 11,
-  },
-  {
-    id: "4",
-    name: "Beatriz Fernandes",
-    time: "3 horas atrás",
-    place: "Luanda - Coqueiros",
-    type: "Oferece serviço",
-    offer: true,
-    title: "Cabeleireira e Estética",
-    desc: "Trabalhos de cabelo, tranças, manicure, pedicure e limpeza de pele.",
-    tags: ["Beleza", "Estética", "Coqueiros"],
-    likes: 31,
-    comments: 7,
+    avatar: photos.jorge,
+    photo: photos.mechanic,
   },
 ];
 
-const CATEGORY_FALLBACK_ICON = "▣";
+function BrandMark({ size = 46, magenta = false }: { size?: number; magenta?: boolean }) {
+  const color = magenta ? colors.magenta : "white";
+  const scale = size / 46;
+  return (
+    <View style={{ width: size, height: size }}>
+      <View style={[styles.markStem, { backgroundColor: color, transform: [{ scale }] }]} />
+      <View style={[styles.markTop, { backgroundColor: color, transform: [{ rotate: "43deg" }, { scale }] }]} />
+      <View style={[styles.markBottom, { backgroundColor: color, transform: [{ rotate: "-43deg" }, { scale }] }]} />
+      <View style={[styles.markDot, { backgroundColor: color, transform: [{ scale }] }]} />
+    </View>
+  );
+}
 
-export function HomeScreen({ navigation }: Props) {
-  const { user, logout } = useAuth();
-  const insets = useSafeAreaInsets();
+function Logo() {
+  return (
+    <View style={styles.logoRow}>
+      <BrandMark />
+      <Text style={styles.logoText}>KONECTA</Text>
+    </View>
+  );
+}
 
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
-  const [activeNav, setActiveNav] = useState<"feed" | "discover" | "contracts" | "account">("feed");
+function Filter({
+  icon,
+  label,
+  onPress,
+}: {
+  icon: IoniconName;
+  label: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable style={styles.filter} onPress={onPress}>
+      <Ionicons name={icon} size={22} color={colors.magenta} />
+      <Text numberOfLines={1} style={styles.filterText}>{label}</Text>
+      <Ionicons name="chevron-down" size={14} color="#4770AB" />
+    </Pressable>
+  );
+}
 
-  useEffect(() => {
-    let isMounted = true;
-    api
-      .listCategories()
-      .then((all) => {
-        if (!isMounted) return;
-        setCategories(all.filter((c) => !c.parentId));
-      })
-      .catch(() => {
-        // Silencioso: o carrossel simplesmente fica vazio se a API falhar,
-        // sem quebrar o resto da tela.
-      });
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  const filteredPosts = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    if (!q) return DEMO_POSTS;
-    return DEMO_POSTS.filter((p) =>
-      `${p.name} ${p.title} ${p.desc} ${p.tags.join(" ")}`
-        .toLowerCase()
-        .includes(q),
-    );
-  }, [searchQuery]);
-
-  function toggleLike(postId: string) {
-    setLikedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(postId)) {
-        next.delete(postId);
-      } else {
-        next.add(postId);
-      }
-      return next;
-    });
-  }
-
-  function openAccountMenu() {
-    Alert.alert("Minha conta", undefined, [
-      { text: "Meu perfil", onPress: () => navigation.navigate("Profile") },
-      {
-        text: "Oferecer serviços",
-        onPress: () => navigation.navigate("ActivateProfessional"),
-      },
-      { text: "Sair", style: "destructive", onPress: () => logout() },
-      { text: "Cancelar", style: "cancel" },
-    ]);
-  }
-
-  function openActionMenu() {
-    Alert.alert("Ação KONECTA", undefined, [
-      {
-        text: "Fazer uma publicação",
-        onPress: () =>
-          Alert.alert("Em breve", "A criação de publicações chega numa próxima fase."),
-      },
-      {
-        text: "Encontrar um serviço",
-        onPress: () => navigation.navigate("Discovery"),
-      },
-      { text: "Cancelar", style: "cancel" },
-    ]);
-  }
-
-  function handleNavPress(page: typeof activeNav) {
-    setActiveNav(page);
-    if (page === "discover") navigation.navigate("Discovery");
-    if (page === "account") navigation.navigate("Profile");
-    if (page === "contracts") {
-      Alert.alert("Contratos", "Esta área chega numa próxima fase.");
-    }
-  }
+function PostCard({ post }: { post: (typeof posts)[number] }) {
+  const [liked, setLiked] = useState(false);
+  const [sent, setSent] = useState(false);
 
   return (
-    <View style={styles.screen}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={[styles.hero, { paddingTop: insets.top + 14 }]}>
-          <View style={styles.topbar}>
-            <TouchableOpacity onPress={openAccountMenu} accessibilityLabel="Menu">
-              <Text style={styles.menuIcon}>☰</Text>
-            </TouchableOpacity>
+    <View style={styles.card}>
+      <View style={styles.cardHeader}>
+        <Image source={{ uri: post.avatar }} style={styles.avatar} />
+        <View style={styles.author}>
+          <Text style={styles.authorName}>{post.name} <Text style={styles.verified}>◆</Text></Text>
+          <Text style={styles.meta}>{post.time}  ·  ⌖ {post.place}</Text>
+        </View>
+        <View style={[styles.servicePill, post.service.startsWith("Oferece") && styles.offerPill]}>
+          <Text style={[styles.serviceText, post.service.startsWith("Oferece") && styles.offerText]}>{post.service}</Text>
+        </View>
+        <Ionicons name="ellipsis-vertical" size={18} color="#4770AB" />
+      </View>
 
-            <View style={styles.brand}>
-              <Text style={styles.brandMark}>K</Text>
-              <View>
-                <Text style={styles.brandName}>KONECTA</Text>
-                <Text style={styles.tagline}>
-                  Tudo o que você precisa. Onde você estiver.
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.topActions}>
-              <TouchableOpacity
-                accessibilityLabel="Notificações"
-                onPress={() => Alert.alert("Notificações", "Sem novidades por agora.")}
-              >
-                <View style={styles.notificationWrap}>
-                  <Text style={styles.notificationIcon}>♧</Text>
-                  <View style={styles.notificationBadge}>
-                    <Text style={styles.notificationBadgeText}>3</Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.avatar}
-                onPress={() => navigation.navigate("Profile")}
-                accessibilityLabel="Minha conta"
-              />
-            </View>
-          </View>
-
-          <View style={styles.searchWrap}>
-            <Text style={styles.searchIcon}>⌕</Text>
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Pesquisar perfis, serviços, produtos ou posts..."
-              placeholderTextColor="#7887a4"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              returnKeyType="search"
-            />
-            <TouchableOpacity
-              style={styles.searchSubmit}
-              onPress={() => setSearchQuery((q) => q)}
-              accessibilityLabel="Pesquisar"
-            >
-              <Text style={styles.searchSubmitText}>→</Text>
-            </TouchableOpacity>
+      <View style={styles.cardContent}>
+        <View style={styles.copy}>
+          <Text style={styles.postTitle}>{post.title}</Text>
+          <Text style={styles.description}>{post.description}</Text>
+          <View style={styles.tags}>
+            {post.tags.map((tag) => <Text style={styles.tag} key={tag}>{tag}</Text>)}
           </View>
         </View>
+        <Image source={{ uri: post.photo }} style={styles.postPhoto} />
+      </View>
 
-        <View style={styles.filters}>
-          {["Todas as publicações", "Todos os locais", "Mais recentes"].map(
-            (label, i) => (
-              <TouchableOpacity
-                key={label}
-                style={[
-                  styles.filterItem,
-                  i < 2 && styles.filterItemBorder,
-                ]}
-                onPress={() =>
-                  Alert.alert(label, "Filtros detalhados chegam numa próxima fase.")
-                }
-              >
-                <Text style={styles.filterText} numberOfLines={1}>
-                  {label}
-                </Text>
-                <Text style={styles.filterChevron}>⌄</Text>
-              </TouchableOpacity>
-            ),
-          )}
-        </View>
-
-        <View style={styles.section}>
-          <View style={styles.sectionTitleRow}>
-            <View style={styles.sectionTitleBar} />
-            <Text style={styles.sectionTitle}>Categorias em destaque</Text>
-          </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.categoryRow}
-          >
-            {categories.length === 0 ? (
-              <Text style={styles.categoryEmpty}>Sem categorias no momento</Text>
-            ) : (
-              categories.map((cat) => (
-                <TouchableOpacity
-                  key={cat.id}
-                  style={styles.category}
-                  onPress={() => navigation.navigate("Discovery")}
-                >
-                  <View style={styles.categoryIconWrap}>
-                    <Text style={styles.categoryIconText}>
-                      {cat.icon ?? CATEGORY_FALLBACK_ICON}
-                    </Text>
-                  </View>
-                  <Text style={styles.categoryLabel} numberOfLines={2}>
-                    {cat.name}
-                  </Text>
-                </TouchableOpacity>
-              ))
-            )}
-          </ScrollView>
-        </View>
-
-        <TouchableOpacity
-          style={styles.publish}
-          onPress={() =>
-            Alert.alert("Em breve", "A criação de publicações chega numa próxima fase.")
-          }
-        >
-          <View style={styles.publishIconWrap}>
-            <Text style={styles.publishIcon}>✎</Text>
-          </View>
-          <View style={styles.publishTextWrap}>
-            <Text style={styles.publishTitle}>Fazer uma publicação</Text>
-            <Text style={styles.publishSubtitle}>
-              Partilhe o seu serviço, produto ou oportunidade
-            </Text>
-          </View>
-          <Text style={styles.publishArrow}>→</Text>
-        </TouchableOpacity>
-
-        <View style={styles.feed}>
-          {filteredPosts.length === 0 ? (
-            <Text style={styles.emptyFeed}>Nenhuma publicação encontrada</Text>
-          ) : (
-            filteredPosts.map((post) => (
-              <View key={post.id} style={styles.post}>
-                <View style={styles.postHead}>
-                  <View style={styles.postPhoto} />
-                  <View style={styles.postUserInfo}>
-                    <Text style={styles.postUser}>
-                      {post.name} <Text style={styles.verified}>◆</Text>
-                    </Text>
-                    <Text style={styles.postMeta}>
-                      {post.time} · ◉ {post.place}
-                    </Text>
-                  </View>
-                  <View style={[styles.badge, post.offer && styles.badgeOffer]}>
-                    <Text
-                      style={[
-                        styles.badgeText,
-                        post.offer && styles.badgeOfferText,
-                      ]}
-                    >
-                      {post.type}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.postBody}>
-                  <Text style={styles.postTitle}>{post.title}</Text>
-                  <Text style={styles.postDesc}>{post.desc}</Text>
-                  <View style={styles.tags}>
-                    {post.tags.map((tag) => (
-                      <View key={tag} style={styles.tag}>
-                        <Text style={styles.tagText}>{tag}</Text>
-                      </View>
-                    ))}
-                  </View>
-                </View>
-
-                <View style={styles.postActions}>
-                  <TouchableOpacity onPress={() => toggleLike(post.id)}>
-                    <Text style={styles.postActionText}>
-                      {likedIds.has(post.id) ? "♥" : "♡"}{" "}
-                      {post.likes + (likedIds.has(post.id) ? 1 : 0)}
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() =>
-                      Alert.alert("Comentários", "Em breve nesta fase.")
-                    }
-                  >
-                    <Text style={styles.postActionText}>◯ {post.comments}</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.contactButton}
-                    onPress={() =>
-                      Alert.alert(
-                        "Contacto",
-                        `A abrir contacto com ${post.name}.`,
-                      )
-                    }
-                  >
-                    <Text style={styles.contactButtonText}>
-                      ◉ Entrar em contacto
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ))
-          )}
-        </View>
-      </ScrollView>
-
-      <View style={[styles.bottomNav, { paddingBottom: Math.max(insets.bottom, 10) }]}>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => handleNavPress("feed")}
-        >
-          <Text style={styles.navIcon}>⌂</Text>
-          <Text style={styles.navLabel}>Feed</Text>
-          {activeNav === "feed" && <View style={styles.navActiveDot} />}
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => handleNavPress("discover")}
-        >
-          <Text style={styles.navIcon}>⌕</Text>
-          <Text style={styles.navLabel}>Descobrir</Text>
-          {activeNav === "discover" && <View style={styles.navActiveDot} />}
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.navAction} onPress={openActionMenu}>
-          <Text style={styles.navActionText}>K</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => handleNavPress("contracts")}
-        >
-          <Text style={styles.navIcon}>▣</Text>
-          <Text style={styles.navLabel}>Contratos</Text>
-          {activeNav === "contracts" && <View style={styles.navActiveDot} />}
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => handleNavPress("account")}
-        >
-          <Text style={styles.navIcon}>♙</Text>
-          <Text style={styles.navLabel}>Minha Conta</Text>
-          {activeNav === "account" && <View style={styles.navActiveDot} />}
-        </TouchableOpacity>
+      <View style={styles.actions}>
+        <Pressable style={styles.action} onPress={() => setLiked((value) => !value)}>
+          <Ionicons name={liked ? "heart" : "heart-outline"} size={25} color={colors.magenta} />
+          <Text style={styles.actionText}>{post.likes + (liked ? 1 : 0)}</Text>
+        </Pressable>
+        <Pressable style={styles.action}>
+          <Ionicons name="chatbubble-outline" size={23} color="#3473B5" />
+          <Text style={styles.actionText}>{post.comments}</Text>
+        </Pressable>
+        <Pressable style={styles.contactButton} onPress={() => setSent(true)}>
+          <Ionicons name={sent ? "checkmark-circle-outline" : "chatbubble-ellipses-outline"} size={19} color={colors.magenta} />
+          <Text style={styles.contactText}>{sent ? "Contacto enviado" : "Entrar em contacto"}</Text>
+        </Pressable>
       </View>
     </View>
   );
 }
 
-const PURPLE = "#a90072";
-const PINK = "#d50a73";
-const ORANGE = "#f49a00";
-const INK = "#102e5d";
-const MUTED = "#6e7d9a";
-const LINE = "#edf0f7";
-const BG = "#f8f9fc";
+export function HomeScreen() {
+  const [query, setQuery] = useState("");
+  const [activeTab, setActiveTab] = useState("Feed");
+  const [fontsLoaded] = useFonts({
+    Nunito_400Regular,
+    Nunito_600SemiBold,
+    Nunito_700Bold,
+    Nunito_800ExtraBold,
+    Nunito_900Black,
+  });
+
+  const show = (message: string) => Alert.alert("KONECTA", message);
+
+  if (!fontsLoaded) return <View style={styles.screen} />;
+
+  return (
+    <View style={styles.screen}>
+      <StatusBar hidden />
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <ImageBackground source={{ uri: photos.hero }} style={styles.hero}>
+          <LinearGradient colors={["rgba(25,32,105,.66)", "rgba(115,0,82,.34)", "rgba(8,24,76,.88)"]} style={StyleSheet.absoluteFill} />
+          <SafeAreaView style={styles.safeHeader}>
+            <View style={styles.topbar}>
+              <Pressable onPress={() => show("Menu principal")} hitSlop={12}>
+                <Ionicons name="menu-outline" size={36} color="white" />
+              </Pressable>
+              <View style={styles.brand}>
+                <Logo />
+                <Text style={styles.tagline}>Tudo o que você precisa. Onde você estiver.</Text>
+              </View>
+              <View style={styles.profile}>
+                <Pressable onPress={() => show("Você tem 3 notificações")}>
+                  <Ionicons name="notifications-outline" size={31} color="white" />
+                  <Text style={styles.badge}>3</Text>
+                </Pressable>
+                <Image source={{ uri: photos.carlos }} style={styles.profilePhoto} />
+              </View>
+            </View>
+          </SafeAreaView>
+
+          <View style={styles.search}>
+            <Ionicons name="search-outline" size={28} color="#5275AE" />
+            <TextInput
+              value={query}
+              onChangeText={setQuery}
+              placeholder="Pesquisar perfis, serviços ou produtos..."
+              placeholderTextColor="#5D7AAE"
+              returnKeyType="search"
+              style={styles.searchInput}
+              onSubmitEditing={() => {
+                Keyboard.dismiss();
+                show(query ? `A pesquisar por "${query}"` : "Digite algo para pesquisar.");
+              }}
+            />
+            <Pressable style={styles.searchButton} onPress={() => show(query ? `A pesquisar por "${query}"` : "Digite algo para pesquisar.")}>
+              <Ionicons name="arrow-forward" size={25} color="white" />
+            </Pressable>
+          </View>
+
+          <View style={styles.filters}>
+            <Filter icon="options-outline" label="Todas as publicações" onPress={() => show("Escolha o tipo de publicação")} />
+            <Filter icon="location-outline" label="Todas as categorias" onPress={() => show("Escolha uma categoria")} />
+            <Filter icon="map-outline" label="Mais recentes" onPress={() => show("Ordenar publicações")} />
+          </View>
+        </ImageBackground>
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categories}>
+          {categories.map((category, index) => (
+            <Pressable key={category.label} style={styles.category} onPress={() => show(category.label.replace("\n", " "))}>
+              <LinearGradient
+                colors={category.warm ? ["#F16A00", "#FFB400"] : ["#EA006A", "#72005D"]}
+                style={[styles.categoryCircle, index === 0 && styles.categoryActive]}
+              >
+                <Ionicons name={category.icon} size={32} color="white" />
+              </LinearGradient>
+              <Text style={styles.categoryText}>{category.label}</Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+
+        <View style={styles.dots}>
+          <View style={styles.activeDot} /><View style={styles.dot} /><View style={styles.dot} />
+        </View>
+
+        <Pressable onPress={() => show("Criar uma nova publicação")}>
+          <LinearGradient colors={["#850064", "#CE0061"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.publish}>
+            <View style={styles.publishIcon}><Ionicons name="create-outline" size={32} color="white" /></View>
+            <View style={styles.publishCopy}>
+              <Text style={styles.publishTitle}>Fazer uma publicação</Text>
+              <Text style={styles.publishDescription}>Partilhe o seu serviço, produto ou oportunidade</Text>
+            </View>
+            <Ionicons name="arrow-forward" size={26} color="white" />
+          </LinearGradient>
+        </Pressable>
+
+        <View style={styles.feed}>
+          {posts.map((post) => <PostCard post={post} key={post.name} />)}
+        </View>
+      </ScrollView>
+
+      <LinearGradient colors={["#7E005D", "#C00066", "#7D005D"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.bottomBar}>
+        {[
+          { label: "Feed", icon: "home-outline" as IoniconName },
+          { label: "Descobrir", icon: "search-outline" as IoniconName },
+        ].map((tab) => (
+          <Pressable key={tab.label} style={styles.tab} onPress={() => setActiveTab(tab.label)}>
+            <Ionicons name={tab.icon} size={27} color="white" />
+            <Text style={styles.tabText}>{tab.label}</Text>
+            {activeTab === tab.label && <View style={styles.tabLine} />}
+          </Pressable>
+        ))}
+        <Pressable style={styles.floatingLogo} onPress={() => show("KONECTA")}>
+          <BrandMark size={52} />
+        </Pressable>
+        {[
+          { label: "Contratos", icon: "briefcase-outline" as IoniconName },
+          { label: "Minha Conta", icon: "person-outline" as IoniconName },
+        ].map((tab) => (
+          <Pressable key={tab.label} style={styles.tab} onPress={() => setActiveTab(tab.label)}>
+            <Ionicons name={tab.icon} size={27} color="white" />
+            <Text style={styles.tabText}>{tab.label}</Text>
+            {activeTab === tab.label && <View style={styles.tabLine} />}
+          </Pressable>
+        ))}
+      </LinearGradient>
+    </View>
+  );
+}
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: BG },
-  scrollContent: { paddingBottom: 110 },
-
-  hero: {
-    backgroundColor: "#18285d",
-    paddingHorizontal: 18,
-    paddingBottom: 20,
-  },
-  topbar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  menuIcon: { color: "#fff", fontSize: 28 },
-  brand: { flexDirection: "row", alignItems: "center", gap: 8, flex: 1, marginLeft: 10 },
-  brandMark: { color: "#fff", fontSize: 30, fontWeight: "900" },
-  brandName: { color: "#fff", fontSize: 20, fontWeight: "800", letterSpacing: -0.5 },
-  tagline: { color: "#fff", fontSize: 9, marginTop: 2 },
-  topActions: { flexDirection: "row", alignItems: "center", gap: 12 },
-  notificationWrap: { position: "relative" },
-  notificationIcon: { color: "#fff", fontSize: 22 },
-  notificationBadge: {
-    position: "absolute",
-    right: -4,
-    top: -6,
-    backgroundColor: PINK,
-    borderRadius: 8,
-    paddingHorizontal: 4,
-    paddingVertical: 1,
-  },
-  notificationBadgeText: { color: "#fff", fontSize: 9, fontWeight: "700" },
-  avatar: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    borderWidth: 2,
-    borderColor: "#fff",
-    backgroundColor: "#6b3a2c",
-  },
-
-  searchWrap: {
-    marginTop: 18,
-    height: 52,
-    backgroundColor: "#fff",
-    borderRadius: 28,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingLeft: 16,
-    paddingRight: 5,
-  },
-  searchIcon: { fontSize: 22, color: MUTED, marginRight: 8 },
-  searchInput: { flex: 1, color: INK, fontSize: 13 },
-  searchSubmit: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: PURPLE,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  searchSubmitText: { color: "#fff", fontSize: 20, fontWeight: "700" },
-
-  filters: {
-    marginHorizontal: 18,
-    marginTop: -14,
-    backgroundColor: "#fff",
-    borderRadius: 18,
-    flexDirection: "row",
-    minHeight: 62,
-  },
-  filterItem: {
-    flex: 1,
-    alignItems: "flex-start",
-    justifyContent: "center",
-    paddingHorizontal: 8,
-    gap: 4,
-  },
-  filterItemBorder: { borderRightWidth: 1, borderRightColor: LINE },
-  filterText: { fontSize: 10, color: INK, fontWeight: "600" },
-  filterChevron: { fontSize: 12, color: "#687994" },
-
-  section: { paddingHorizontal: 18, marginTop: 16 },
-  sectionTitleRow: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
-  sectionTitleBar: {
-    width: 5,
-    height: 18,
-    borderRadius: 6,
-    backgroundColor: PURPLE,
-    marginRight: 8,
-  },
-  sectionTitle: { fontSize: 15, fontWeight: "800", color: INK },
-  categoryRow: { gap: 12, paddingBottom: 4 },
-  categoryEmpty: { fontSize: 12, color: MUTED },
+  screen: { flex: 1, backgroundColor: colors.paper },
+  scrollContent: { paddingBottom: 106 },
+  hero: { height: 326, paddingHorizontal: 15 },
+  safeHeader: { marginTop: 0 },
+  topbar: { height: 82, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  brand: { alignItems: "center" },
+  logoRow: { flexDirection: "row", alignItems: "center", gap: 7 },
+  markStem: { position: "absolute", left: 8, top: 8, width: 8, height: 32, borderRadius: 5 },
+  markTop: { position: "absolute", left: 23, top: 1, width: 8, height: 27, borderRadius: 5 },
+  markBottom: { position: "absolute", left: 23, top: 19, width: 8, height: 28, borderRadius: 5 },
+  markDot: { position: "absolute", left: 6, top: 0, width: 12, height: 12, borderRadius: 7 },
+  logoText: { color: "white", fontSize: 29, lineHeight: 38, fontFamily: "Nunito_900Black", letterSpacing: -1.2 },
+  tagline: { color: "rgba(255,255,255,.96)", fontSize: 9, fontFamily: "Nunito_700Bold", marginTop: -4, letterSpacing: 0.1 },
+  profile: { flexDirection: "row", alignItems: "center", gap: 7 },
+  profilePhoto: { width: 42, height: 42, borderRadius: 22, borderWidth: 2, borderColor: "white" },
+  badge: { position: "absolute", right: -4, top: -7, color: "white", backgroundColor: "#D80065", borderColor: "white", borderWidth: 1.5, width: 20, height: 20, borderRadius: 10, textAlign: "center", fontSize: 11, lineHeight: 17, fontWeight: "800" },
+  search: { height: 59, borderRadius: 31, borderWidth: 1, borderColor: "rgba(255,255,255,.85)", backgroundColor: "white", flexDirection: "row", alignItems: "center", paddingLeft: 18, paddingRight: 6, gap: 10, marginTop: 48, shadowColor: "#001847", shadowOpacity: 0.24, shadowRadius: 12, elevation: 7 },
+  searchInput: { flex: 1, color: colors.ink, fontSize: 13, height: "100%", fontFamily: "Nunito_600SemiBold" },
+  searchButton: { width: 48, height: 48, borderRadius: 24, borderWidth: 1, borderColor: "#E1117D", backgroundColor: colors.magenta, alignItems: "center", justifyContent: "center", shadowColor: colors.magenta, shadowOpacity: .2, shadowRadius: 5, elevation: 2 },
+  filters: { height: 69, marginTop: 14, backgroundColor: "white", borderRadius: 22, borderWidth: 1, borderColor: "#E9EDF5", flexDirection: "row", paddingHorizontal: 5, shadowColor: "#173165", shadowOpacity: 0.14, shadowRadius: 9, elevation: 5, overflow: "hidden" },
+  filter: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, paddingHorizontal: 4, borderRightWidth: StyleSheet.hairlineWidth, borderRightColor: "#D7DEEA" },
+  filterText: { color: colors.ink, fontSize: 9, fontFamily: "Nunito_700Bold", maxWidth: 76 },
+  categories: { paddingHorizontal: 18, paddingTop: 21, paddingBottom: 8, gap: 12 },
   category: { width: 76, alignItems: "center" },
-  categoryIconWrap: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: PURPLE,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  categoryIconText: { fontSize: 24, color: "#fff" },
-  categoryLabel: {
-    fontSize: 10,
-    fontWeight: "700",
-    color: INK,
-    textAlign: "center",
-    marginTop: 6,
-  },
-
-  publish: {
-    marginHorizontal: 18,
-    marginTop: 16,
-    backgroundColor: "#a50072",
-    borderRadius: 16,
-    minHeight: 70,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 14,
-    gap: 12,
-  },
-  publishIconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: "rgba(255,255,255,0.18)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  publishIcon: { fontSize: 22, color: "#fff" },
-  publishTextWrap: { flex: 1 },
-  publishTitle: { color: "#fff", fontSize: 15, fontWeight: "700" },
-  publishSubtitle: { color: "#fff", fontSize: 10, marginTop: 4 },
-  publishArrow: { color: "#fff", fontSize: 24 },
-
-  feed: { paddingHorizontal: 18, marginTop: 18, gap: 13 },
-  emptyFeed: { fontSize: 12, color: MUTED, textAlign: "center", marginTop: 20 },
-  post: {
-    backgroundColor: "#fff",
-    borderRadius: 18,
-    padding: 14,
-  },
-  postHead: { flexDirection: "row", alignItems: "center", gap: 9 },
-  postPhoto: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#b17b59",
-  },
-  postUserInfo: { flex: 1 },
-  postUser: { fontSize: 13, fontWeight: "800", color: INK },
-  verified: { color: PURPLE },
-  postMeta: { fontSize: 9, color: "#74819a", marginTop: 3 },
-  badge: {
-    borderRadius: 14,
-    paddingHorizontal: 9,
-    paddingVertical: 5,
-    backgroundColor: "#fcebf6",
-  },
-  badgeOffer: { backgroundColor: "#e7f8f6" },
-  badgeText: { fontSize: 9, fontWeight: "700", color: PURPLE },
-  badgeOfferText: { color: "#15988b" },
-
-  postBody: { marginTop: 10 },
-  postTitle: { fontSize: 13, fontWeight: "700", color: INK, marginBottom: 5 },
-  postDesc: { fontSize: 11, lineHeight: 15, color: "#637392" },
-  tags: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 8 },
-  tag: { backgroundColor: "#f1f4fa", borderRadius: 10, paddingHorizontal: 8, paddingVertical: 4 },
-  tagText: { fontSize: 8, color: "#60708e" },
-
-  postActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 18,
-    borderTopWidth: 1,
-    borderTopColor: "#edf0f5",
-    marginTop: 12,
-    paddingTop: 10,
-  },
-  postActionText: { fontSize: 11, color: "#53627d" },
-  contactButton: {
-    marginLeft: "auto",
-    borderWidth: 1.5,
-    borderColor: PURPLE,
-    borderRadius: 18,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-  },
-  contactButtonText: { fontSize: 10, fontWeight: "700", color: PURPLE },
-
-  bottomNav: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "#8c0069",
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-around",
-    borderTopLeftRadius: 22,
-    borderTopRightRadius: 22,
-    paddingTop: 10,
-    paddingHorizontal: 4,
-  },
-  navItem: { alignItems: "center", gap: 3, paddingBottom: 4 },
-  navIcon: { color: "#fff", fontSize: 20 },
-  navLabel: { color: "#fff", fontSize: 9 },
-  navActiveDot: {
-    width: 34,
-    height: 3,
-    borderRadius: 3,
-    backgroundColor: "#fff",
-    marginTop: 2,
-  },
-  navAction: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
-    backgroundColor: PURPLE,
-    borderWidth: 4,
-    borderColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: -26,
-  },
-  navActionText: { color: "#fff", fontSize: 26, fontWeight: "900" },
+  categoryCircle: { width: 63, height: 63, borderRadius: 32, borderWidth: 1, borderColor: "rgba(255,255,255,.75)", alignItems: "center", justifyContent: "center", shadowColor: "#4B0045", shadowOpacity: .16, shadowRadius: 4, elevation: 2 },
+  categoryActive: { borderWidth: 3, borderColor: "white", outlineColor: colors.pink, outlineWidth: 2 },
+  categoryText: { marginTop: 7, minHeight: 31, textAlign: "center", color: colors.ink, fontSize: 9, fontFamily: "Nunito_800ExtraBold", lineHeight: 12 },
+  dots: { flexDirection: "row", justifyContent: "center", gap: 9, height: 24, paddingTop: 5 },
+  dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: "#D7DEEB" },
+  activeDot: { width: 15, height: 10, borderRadius: 5, backgroundColor: colors.magenta },
+  publish: { marginHorizontal: 15, height: 82, borderRadius: 18, borderWidth: 1, borderColor: "rgba(255,255,255,.2)", flexDirection: "row", alignItems: "center", paddingHorizontal: 14, shadowColor: "#820052", shadowOpacity: .18, shadowRadius: 8, elevation: 4 },
+  publishIcon: { width: 55, height: 55, borderRadius: 14, borderWidth: 1, borderColor: "rgba(255,255,255,.24)", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,.17)" },
+  publishCopy: { flex: 1, marginLeft: 12 },
+  publishTitle: { color: "white", fontSize: 17, fontFamily: "Nunito_800ExtraBold" },
+  publishDescription: { color: "rgba(255,255,255,.94)", fontSize: 10, marginTop: 2, fontFamily: "Nunito_600SemiBold" },
+  feed: { paddingHorizontal: 14, paddingTop: 16, gap: 14 },
+  card: { backgroundColor: "white", borderRadius: 20, borderWidth: 1, borderColor: "#EDF1F7", padding: 14, shadowColor: "#18315A", shadowOpacity: 0.09, shadowRadius: 10, elevation: 3 },
+  cardHeader: { flexDirection: "row", alignItems: "center", gap: 8 },
+  avatar: { width: 46, height: 46, borderRadius: 23 },
+  author: { flex: 1 },
+  authorName: { color: colors.ink, fontSize: 13, fontFamily: "Nunito_800ExtraBold" },
+  verified: { color: colors.magenta, fontSize: 8 },
+  meta: { color: colors.blue, fontSize: 9, marginTop: 3, fontFamily: "Nunito_600SemiBold" },
+  servicePill: { borderRadius: 15, backgroundColor: "#FFF0F7", paddingVertical: 6, paddingHorizontal: 8 },
+  offerPill: { backgroundColor: "#EAFBF8" },
+  serviceText: { color: colors.magenta, fontSize: 8, fontFamily: "Nunito_800ExtraBold" },
+  offerText: { color: "#009E8B" },
+  cardContent: { flexDirection: "row", gap: 10, marginTop: 9 },
+  copy: { flex: 1 },
+  postTitle: { color: colors.ink, fontSize: 15, lineHeight: 19, fontFamily: "Nunito_800ExtraBold" },
+  description: { color: colors.blue, fontSize: 11, lineHeight: 15, marginTop: 2, fontFamily: "Nunito_400Regular" },
+  postPhoto: { width: 105, height: 91, borderRadius: 11, borderWidth: 1, borderColor: "#E8EDF5" },
+  tags: { flexDirection: "row", flexWrap: "wrap", gap: 5, marginTop: 7 },
+  tag: { backgroundColor: "#F2F5FA", borderRadius: 12, borderWidth: 1, borderColor: "#EDF1F6", paddingVertical: 4, paddingHorizontal: 7, color: colors.blue, fontSize: 8, fontFamily: "Nunito_600SemiBold" },
+  actions: { borderTopWidth: 1, borderTopColor: "#EDF0F7", marginTop: 9, paddingTop: 9, flexDirection: "row", alignItems: "center", gap: 14 },
+  action: { flexDirection: "row", alignItems: "center", gap: 5 },
+  actionText: { color: colors.ink, fontSize: 12, fontFamily: "Nunito_700Bold" },
+  contactButton: { marginLeft: "auto", borderWidth: 1.3, borderColor: colors.magenta, borderRadius: 19, paddingHorizontal: 11, paddingVertical: 7, flexDirection: "row", alignItems: "center", gap: 5 },
+  contactText: { color: colors.magenta, fontSize: 9, fontFamily: "Nunito_800ExtraBold" },
+  bottomBar: { position: "absolute", left: 0, right: 0, bottom: 0, height: 82, flexDirection: "row", alignItems: "center", paddingBottom: 5, borderTopWidth: 1, borderTopColor: "rgba(255,255,255,.25)", borderTopLeftRadius: 26, borderTopRightRadius: 26, shadowColor: "#41003C", shadowOpacity: .24, shadowRadius: 9, elevation: 12 },
+  tab: { flex: 1, height: "100%", alignItems: "center", justifyContent: "center", gap: 2 },
+  tabText: { color: "white", fontSize: 10, fontFamily: "Nunito_600SemiBold" },
+  tabLine: { position: "absolute", bottom: 5, width: 46, height: 3, borderRadius: 2, backgroundColor: "white" },
+  floatingLogo: { width: 78, height: 78, borderRadius: 39, marginTop: -35, backgroundColor: "#B70067", borderColor: "white", borderWidth: 5, alignItems: "center", justifyContent: "center", shadowColor: "#580043", shadowOpacity: .3, shadowRadius: 6, elevation: 7 },
 });
