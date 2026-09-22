@@ -15,6 +15,10 @@
     "android": {
       "package": "com.konecta.app"
     },
+    "plugins": [
+      "expo-secure-store",
+      "expo-status-bar"
+    ],
     "extra": {
       "eas": {
         "projectId": "829bd1e2-cf13-47bf-871f-3d18a387ab8f"
