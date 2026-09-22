@@ -19,6 +19,11 @@ import { CompanyPublicScreen } from "../screens/Company/CompanyPublicScreen";
 import { ActivateProfessionalScreen } from "../screens/Professional/ActivateProfessionalScreen";
 import { SideMenuScreen } from "../screens/SideMenu/SideMenuScreen";
 import { NotificationsScreen } from "../screens/Notifications/NotificationsScreen";
+import { FeedSearchScreen } from "../screens/Search/FeedSearchScreen";
+import { FeedSearchResultsScreen } from "../screens/Search/FeedSearchResultsScreen";
+import { PostDetailScreen } from "../screens/Post/PostDetailScreen";
+import { CommentsScreen } from "../screens/Post/CommentsScreen";
+import { ContactScreen } from "../screens/Post/ContactScreen";
 
 export type AuthStackParamList = {
   Splash: undefined;
@@ -42,6 +47,11 @@ export type RootStackParamList = {
   ActivateProfessional: undefined;
   SideMenu: undefined;
   Notifications: undefined;
+  FeedSearch: undefined;
+  FeedSearchResults: { query: string };
+  PostDetail: { postId: string };
+  Comments: { postId: string };
+  Contact: { postId: string };
 };
 
 export type AuthScreenProps = NativeStackScreenProps<AuthStackParamList>;
@@ -63,51 +73,20 @@ function AuthNavigator() {
 function AppStack() {
   return (
     <RootStack.Navigator>
-      <RootStack.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{ headerShown: false }}
-      />
-      <RootStack.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{ title: "Meu perfil" }}
-      />
-      <RootStack.Screen
-        name="Discovery"
-        component={DiscoverySearchScreen}
-        options={{ title: "O que você precisa?" }}
-      />
-      <RootStack.Screen
-        name="DiscoveryResults"
-        component={DiscoveryResultsScreen}
-        options={{ title: "Resultados próximos" }}
-      />
-      <RootStack.Screen
-        name="ProfessionalPublic"
-        component={ProfessionalPublicScreen}
-        options={{ title: "Profissional" }}
-      />
-      <RootStack.Screen
-        name="CompanyPublic"
-        component={CompanyPublicScreen}
-        options={{ title: "Empresa" }}
-      />
-      <RootStack.Screen
-        name="ActivateProfessional"
-        component={ActivateProfessionalScreen}
-        options={{ title: "Oferecer serviços" }}
-      />
-      <RootStack.Screen
-        name="SideMenu"
-        component={SideMenuScreen}
-        options={{ headerShown: false, presentation: "transparentModal", animation: "fade" }}
-      />
-      <RootStack.Screen
-        name="Notifications"
-        component={NotificationsScreen}
-        options={{ title: "Notificações" }}
-      />
+      <RootStack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
+      <RootStack.Screen name="Profile" component={ProfileScreen} options={{ title: "Meu perfil" }} />
+      <RootStack.Screen name="Discovery" component={DiscoverySearchScreen} options={{ title: "O que você precisa?" }} />
+      <RootStack.Screen name="DiscoveryResults" component={DiscoveryResultsScreen} options={{ title: "Resultados próximos" }} />
+      <RootStack.Screen name="ProfessionalPublic" component={ProfessionalPublicScreen} options={{ title: "Profissional" }} />
+      <RootStack.Screen name="CompanyPublic" component={CompanyPublicScreen} options={{ title: "Empresa" }} />
+      <RootStack.Screen name="ActivateProfessional" component={ActivateProfessionalScreen} options={{ title: "Oferecer serviços" }} />
+      <RootStack.Screen name="SideMenu" component={SideMenuScreen} options={{ headerShown: false, presentation: "transparentModal", animation: "fade" }} />
+      <RootStack.Screen name="Notifications" component={NotificationsScreen} options={{ title: "Notificações" }} />
+      <RootStack.Screen name="FeedSearch" component={FeedSearchScreen} options={{ headerShown: false }} />
+      <RootStack.Screen name="FeedSearchResults" component={FeedSearchResultsScreen} options={{ headerShown: false }} />
+      <RootStack.Screen name="PostDetail" component={PostDetailScreen} options={{ headerShown: false }} />
+      <RootStack.Screen name="Comments" component={CommentsScreen} options={{ headerShown: false }} />
+      <RootStack.Screen name="Contact" component={ContactScreen} options={{ headerShown: false }} />
     </RootStack.Navigator>
   );
 }
