@@ -6,6 +6,8 @@ import {
   type NativeStackScreenProps,
 } from "@react-navigation/native-stack";
 import { useAuth } from "../context/AuthContext";
+import { SplashScreen } from "../screens/Splash/SplashScreen";
+import { OnboardingScreen } from "../screens/Onboarding/OnboardingScreen";
 import { LoginScreen } from "../screens/Auth/LoginScreen";
 import { RegisterScreen } from "../screens/Auth/RegisterScreen";
 import { HomeScreen } from "../screens/Home/HomeScreen";
@@ -15,8 +17,12 @@ import { DiscoveryResultsScreen } from "../screens/Discovery/DiscoveryResultsScr
 import { ProfessionalPublicScreen } from "../screens/Professional/ProfessionalPublicScreen";
 import { CompanyPublicScreen } from "../screens/Company/CompanyPublicScreen";
 import { ActivateProfessionalScreen } from "../screens/Professional/ActivateProfessionalScreen";
+import { SideMenuScreen } from "../screens/SideMenu/SideMenuScreen";
+import { NotificationsScreen } from "../screens/Notifications/NotificationsScreen";
 
 export type AuthStackParamList = {
+  Splash: undefined;
+  Onboarding: undefined;
   Login: undefined;
   Register: undefined;
 };
@@ -34,6 +40,8 @@ export type RootStackParamList = {
   ProfessionalPublic: { userId: string };
   CompanyPublic: { id: string };
   ActivateProfessional: undefined;
+  SideMenu: undefined;
+  Notifications: undefined;
 };
 
 export type AuthScreenProps = NativeStackScreenProps<AuthStackParamList>;
@@ -43,7 +51,9 @@ const RootStack = createNativeStackNavigator<RootStackParamList>();
 
 function AuthNavigator() {
   return (
-    <AuthStack.Navigator screenOptions={{ headerShown: false }}>
+    <AuthStack.Navigator initialRouteName="Splash" screenOptions={{ headerShown: false }}>
+      <AuthStack.Screen name="Splash" component={SplashScreen} />
+      <AuthStack.Screen name="Onboarding" component={OnboardingScreen} />
       <AuthStack.Screen name="Login" component={LoginScreen} />
       <AuthStack.Screen name="Register" component={RegisterScreen} />
     </AuthStack.Navigator>
@@ -87,6 +97,16 @@ function AppStack() {
         name="ActivateProfessional"
         component={ActivateProfessionalScreen}
         options={{ title: "Oferecer serviços" }}
+      />
+      <RootStack.Screen
+        name="SideMenu"
+        component={SideMenuScreen}
+        options={{ headerShown: false, presentation: "transparentModal", animation: "fade" }}
+      />
+      <RootStack.Screen
+        name="Notifications"
+        component={NotificationsScreen}
+        options={{ title: "Notificações" }}
       />
     </RootStack.Navigator>
   );
