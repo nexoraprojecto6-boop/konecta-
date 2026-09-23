@@ -30,6 +30,11 @@ import { PostPreviewScreen } from "../screens/CreatePost/PostPreviewScreen";
 import { PostSuccessScreen } from "../screens/CreatePost/PostSuccessScreen";
 import { ContractsScreen } from "../screens/Contracts/ContractsScreen";
 import { ContractDetailScreen } from "../screens/Contracts/ContractDetailScreen";
+import { AccountScreen } from "../screens/Account/AccountScreen";
+import { FavoritesScreen } from "../screens/Account/FavoritesScreen";
+import { SettingsScreen } from "../screens/Account/SettingsScreen";
+import { HelpScreen } from "../screens/Account/HelpScreen";
+import { AboutScreen } from "../screens/Account/AboutScreen";
 
 export type AuthStackParamList = {
   Splash: undefined;
@@ -64,6 +69,11 @@ export type RootStackParamList = {
   PostSuccess: undefined;
   Contracts: undefined;
   ContractDetail: { contractId: string };
+  Account: undefined;
+  Favorites: undefined;
+  Settings: undefined;
+  Help: undefined;
+  About: undefined;
 };
 
 export type AuthScreenProps = NativeStackScreenProps<AuthStackParamList>;
@@ -86,7 +96,7 @@ function AppStack() {
   return (
     <RootStack.Navigator>
       <RootStack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
-      <RootStack.Screen name="Profile" component={ProfileScreen} options={{ title: "Meu perfil" }} />
+      <RootStack.Screen name="Profile" component={ProfileScreen} options={{ title: "Editar perfil" }} />
       <RootStack.Screen name="Discovery" component={DiscoverySearchScreen} options={{ title: "O que você precisa?" }} />
       <RootStack.Screen name="DiscoveryResults" component={DiscoveryResultsScreen} options={{ title: "Resultados próximos" }} />
       <RootStack.Screen name="ProfessionalPublic" component={ProfessionalPublicScreen} options={{ title: "Profissional" }} />
@@ -105,6 +115,11 @@ function AppStack() {
       <RootStack.Screen name="PostSuccess" component={PostSuccessScreen} options={{ headerShown: false }} />
       <RootStack.Screen name="Contracts" component={ContractsScreen} options={{ headerShown: false }} />
       <RootStack.Screen name="ContractDetail" component={ContractDetailScreen} options={{ headerShown: false }} />
+      <RootStack.Screen name="Account" component={AccountScreen} options={{ headerShown: false }} />
+      <RootStack.Screen name="Favorites" component={FavoritesScreen} options={{ headerShown: false }} />
+      <RootStack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
+      <RootStack.Screen name="Help" component={HelpScreen} options={{ headerShown: false }} />
+      <RootStack.Screen name="About" component={AboutScreen} options={{ headerShown: false }} />
     </RootStack.Navigator>
   );
 }
