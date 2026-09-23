@@ -77,7 +77,7 @@ export function HomeScreen({ navigation }: Props) {
   function handleNavPress(page: typeof activeNav) {
     setActiveNav(page);
     if (page === "discover") navigation.navigate("Discovery");
-    if (page === "account") navigation.navigate("Profile");
+    if (page === "account") navigation.navigate("Account");
     if (page === "contracts") navigation.navigate("Contracts");
   }
 
@@ -117,7 +117,7 @@ export function HomeScreen({ navigation }: Props) {
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.avatar}
-                onPress={() => navigation.navigate("Profile")}
+                onPress={() => navigation.navigate("Account")}
                 accessibilityLabel="Minha conta"
               />
             </View>
