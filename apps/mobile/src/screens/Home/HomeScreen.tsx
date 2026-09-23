@@ -14,81 +14,10 @@ import type { Category } from "@konecta/types";
 import type { RootStackParamList } from "../../navigation/AppNavigator";
 import { useAuth } from "../../context/AuthContext";
 import * as api from "../../services/api";
+import { DEMO_POSTS } from "../../data/feedPosts";
+import { FeedPostCard } from "../../components/FeedPostCard";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Home">;
-
-/**
- * Dados de feed são demonstrativos nesta fase: o KONECTA ainda não tem
- * um modelo de "publicações" (pedidos/ofertas) no backend — apenas
- * Category, ProfessionalProfile, Company e Service. Quando esse modelo
- * existir, esta lista passa a vir de api.listFeedPosts() ou equivalente.
- */
-type FeedPost = {
-  id: string;
-  name: string;
-  time: string;
-  place: string;
-  type: string;
-  offer?: boolean;
-  title: string;
-  desc: string;
-  tags: string[];
-  likes: number;
-  comments: number;
-};
-
-const DEMO_POSTS: FeedPost[] = [
-  {
-    id: "1",
-    name: "Carlos Mendes",
-    time: "30 min atrás",
-    place: "Luanda - Maianga",
-    type: "Precisa de serviço",
-    title: "Preciso de um eletricista urgente em casa.",
-    desc: "O disjuntor está a cair toda hora e preciso resolver ainda hoje.",
-    tags: ["Eletricista", "Residencial", "Maianga"],
-    likes: 12,
-    comments: 8,
-  },
-  {
-    id: "2",
-    name: "Ana Silva",
-    time: "1 hora atrás",
-    place: "Luanda - Talatona",
-    type: "Oferece serviço",
-    offer: true,
-    title: "Design Gráfico | Logotipos, Flyers e Identidade Visual",
-    desc: "Trabalho com criação de logotipos, artes para redes sociais, flyers e muito mais. Qualidade, agilidade e preço justo!",
-    tags: ["Design Gráfico", "Marketing Digital", "Talatona"],
-    likes: 24,
-    comments: 5,
-  },
-  {
-    id: "3",
-    name: "Jorge Silva",
-    time: "2 horas atrás",
-    place: "Luanda - Kilamba",
-    type: "Precisa de serviço",
-    title: "Procuro um mecânico de confiança",
-    desc: "Meu carro está a fazer um barulho estranho, alguém de confiança que possa dar uma olhada. Pode ser oficina ou profissional.",
-    tags: ["Mecânica", "Automóveis", "Kilamba"],
-    likes: 18,
-    comments: 11,
-  },
-  {
-    id: "4",
-    name: "Beatriz Fernandes",
-    time: "3 horas atrás",
-    place: "Luanda - Coqueiros",
-    type: "Oferece serviço",
-    offer: true,
-    title: "Cabeleireira e Estética",
-    desc: "Trabalhos de cabelo, tranças, manicure, pedicure e limpeza de pele.",
-    tags: ["Beleza", "Estética", "Coqueiros"],
-    likes: 31,
-    comments: 7,
-  },
-];
 
 const CATEGORY_FALLBACK_ICON = "▣";
 
@@ -98,7 +27,6 @@ export function HomeScreen({ navigation }: Props) {
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
   const [activeNav, setActiveNav] = useState<"feed" | "discover" | "contracts" | "account">("feed");
 
   useEffect(() => {
@@ -128,18 +56,6 @@ export function HomeScreen({ navigation }: Props) {
     );
   }, [searchQuery]);
 
-  function toggleLike(postId: string) {
-    setLikedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(postId)) {
-        next.delete(postId);
-      } else {
-        next.add(postId);
-      }
-      return next;
-    });
-  }
-
   function openAccountMenu() {
     navigation.navigate("SideMenu");
   }
@@ -148,8 +64,7 @@ export function HomeScreen({ navigation }: Props) {
     Alert.alert("Ação KONECTA", undefined, [
       {
         text: "Fazer uma publicação",
-        onPress: () =>
-          Alert.alert("Em breve", "A criação de publicações chega numa próxima fase."),
+        onPress: () => navigation.navigate("CreatePostType"),
       },
       {
         text: "Encontrar um serviço",
@@ -163,9 +78,7 @@ export function HomeScreen({ navigation }: Props) {
     setActiveNav(page);
     if (page === "discover") navigation.navigate("Discovery");
     if (page === "account") navigation.navigate("Profile");
-    if (page === "contracts") {
-      Alert.alert("Contratos", "Esta área chega numa próxima fase.");
-    }
+    if (page === "contracts") navigation.navigate("Contracts");
   }
 
   return (
@@ -219,10 +132,11 @@ export function HomeScreen({ navigation }: Props) {
               value={searchQuery}
               onChangeText={setSearchQuery}
               returnKeyType="search"
+              onFocus={() => navigation.navigate("FeedSearch")}
             />
             <TouchableOpacity
               style={styles.searchSubmit}
-              onPress={() => setSearchQuery((q) => q)}
+              onPress={() => navigation.navigate("FeedSearch")}
               accessibilityLabel="Pesquisar"
             >
               <Text style={styles.searchSubmitText}>→</Text>
@@ -287,9 +201,7 @@ export function HomeScreen({ navigation }: Props) {
 
         <TouchableOpacity
           style={styles.publish}
-          onPress={() =>
-            Alert.alert("Em breve", "A criação de publicações chega numa próxima fase.")
-          }
+          onPress={() => navigation.navigate("CreatePostType")}
         >
           <View style={styles.publishIconWrap}>
             <Text style={styles.publishIcon}>✎</Text>
@@ -308,70 +220,11 @@ export function HomeScreen({ navigation }: Props) {
             <Text style={styles.emptyFeed}>Nenhuma publicação encontrada</Text>
           ) : (
             filteredPosts.map((post) => (
-              <View key={post.id} style={styles.post}>
-                <View style={styles.postHead}>
-                  <View style={styles.postPhoto} />
-                  <View style={styles.postUserInfo}>
-                    <Text style={styles.postUser}>
-                      {post.name} <Text style={styles.verified}>◆</Text>
-                    </Text>
-                    <Text style={styles.postMeta}>
-                      {post.time} · ◉ {post.place}
-                    </Text>
-                  </View>
-                  <View style={[styles.badge, post.offer && styles.badgeOffer]}>
-                    <Text
-                      style={[
-                        styles.badgeText,
-                        post.offer && styles.badgeOfferText,
-                      ]}
-                    >
-                      {post.type}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.postBody}>
-                  <Text style={styles.postTitle}>{post.title}</Text>
-                  <Text style={styles.postDesc}>{post.desc}</Text>
-                  <View style={styles.tags}>
-                    {post.tags.map((tag) => (
-                      <View key={tag} style={styles.tag}>
-                        <Text style={styles.tagText}>{tag}</Text>
-                      </View>
-                    ))}
-                  </View>
-                </View>
-
-                <View style={styles.postActions}>
-                  <TouchableOpacity onPress={() => toggleLike(post.id)}>
-                    <Text style={styles.postActionText}>
-                      {likedIds.has(post.id) ? "♥" : "♡"}{" "}
-                      {post.likes + (likedIds.has(post.id) ? 1 : 0)}
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() =>
-                      Alert.alert("Comentários", "Em breve nesta fase.")
-                    }
-                  >
-                    <Text style={styles.postActionText}>◯ {post.comments}</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.contactButton}
-                    onPress={() =>
-                      Alert.alert(
-                        "Contacto",
-                        `A abrir contacto com ${post.name}.`,
-                      )
-                    }
-                  >
-                    <Text style={styles.contactButtonText}>
-                      ◉ Entrar em contacto
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
+              <FeedPostCard
+                key={post.id}
+                post={post}
+                onPress={() => navigation.navigate("PostDetail", { postId: post.id })}
+              />
             ))
           )}
         </View>
@@ -569,58 +422,6 @@ const styles = StyleSheet.create({
 
   feed: { paddingHorizontal: 18, marginTop: 18, gap: 13 },
   emptyFeed: { fontSize: 12, color: MUTED, textAlign: "center", marginTop: 20 },
-  post: {
-    backgroundColor: "#fff",
-    borderRadius: 18,
-    padding: 14,
-  },
-  postHead: { flexDirection: "row", alignItems: "center", gap: 9 },
-  postPhoto: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#b17b59",
-  },
-  postUserInfo: { flex: 1 },
-  postUser: { fontSize: 13, fontWeight: "800", color: INK },
-  verified: { color: PURPLE },
-  postMeta: { fontSize: 9, color: "#74819a", marginTop: 3 },
-  badge: {
-    borderRadius: 14,
-    paddingHorizontal: 9,
-    paddingVertical: 5,
-    backgroundColor: "#fcebf6",
-  },
-  badgeOffer: { backgroundColor: "#e7f8f6" },
-  badgeText: { fontSize: 9, fontWeight: "700", color: PURPLE },
-  badgeOfferText: { color: "#15988b" },
-
-  postBody: { marginTop: 10 },
-  postTitle: { fontSize: 13, fontWeight: "700", color: INK, marginBottom: 5 },
-  postDesc: { fontSize: 11, lineHeight: 15, color: "#637392" },
-  tags: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 8 },
-  tag: { backgroundColor: "#f1f4fa", borderRadius: 10, paddingHorizontal: 8, paddingVertical: 4 },
-  tagText: { fontSize: 8, color: "#60708e" },
-
-  postActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 18,
-    borderTopWidth: 1,
-    borderTopColor: "#edf0f5",
-    marginTop: 12,
-    paddingTop: 10,
-  },
-  postActionText: { fontSize: 11, color: "#53627d" },
-  contactButton: {
-    marginLeft: "auto",
-    borderWidth: 1.5,
-    borderColor: PURPLE,
-    borderRadius: 18,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-  },
-  contactButtonText: { fontSize: 10, fontWeight: "700", color: PURPLE },
 
   bottomNav: {
     position: "absolute",
