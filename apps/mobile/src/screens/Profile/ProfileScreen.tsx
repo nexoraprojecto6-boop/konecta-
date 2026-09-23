@@ -13,6 +13,7 @@ import { PROVINCES, type AppRegion } from "@konecta/config";
 import type { UserLocation } from "@konecta/types";
 import { useAuth } from "../../context/AuthContext";
 import * as api from "../../services/api";
+import { colors, fonts, radius, cardShadow } from "../../theme/tokens";
 
 export function ProfileScreen() {
   const { user, accessToken, updateUser } = useAuth();
@@ -137,140 +138,126 @@ export function ProfileScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Meu perfil</Text>
+    <ScrollView style={styles.screen} contentContainerStyle={styles.container}>
+      <View style={styles.card}>
+        <Text style={styles.title}>Meu perfil</Text>
 
-      <Text style={styles.label}>Email</Text>
-      <Text style={styles.readOnly}>{user?.email}</Text>
+        <Text style={styles.label}>Email</Text>
+        <Text style={styles.readOnly}>{user?.email}</Text>
 
-      <Text style={styles.label}>Nome</Text>
-      <TextInput style={styles.input} value={name} onChangeText={setName} />
+        <Text style={styles.label}>Nome</Text>
+        <TextInput style={styles.input} value={name} onChangeText={setName} placeholderTextColor={colors.muted} />
 
-      {profileError && <Text style={styles.error}>{profileError}</Text>}
-      {profileSaved && <Text style={styles.success}>Perfil atualizado.</Text>}
+        {profileError && <Text style={styles.error}>{profileError}</Text>}
+        {profileSaved && <Text style={styles.success}>Perfil atualizado.</Text>}
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={handleSaveProfile}
-        disabled={savingProfile}
-      >
-        {savingProfile ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Salvar perfil</Text>
-        )}
-      </TouchableOpacity>
-
-      <Text style={[styles.title, styles.sectionSpacing]}>Localização</Text>
-
-      {loadingLocation ? (
-        <ActivityIndicator />
-      ) : (
-        <>
-          <Text style={styles.label}>Província</Text>
-          <View style={styles.regionRow}>
-            {provinces.map((p) => (
-              <TouchableOpacity
-                key={p}
-                style={[
-                  styles.provinceOption,
-                  province === p && styles.provinceOptionSelected,
-                ]}
-                onPress={() => setProvince(p)}
-              >
-                <Text
-                  style={
-                    province === p
-                      ? styles.provinceTextSelected
-                      : styles.provinceText
-                  }
-                >
-                  {p}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          <Text style={styles.label}>Cidade</Text>
-          <TextInput style={styles.input} value={city} onChangeText={setCity} />
-
-          {location?.latitude !== null && location?.latitude !== undefined && (
-            <Text style={styles.readOnly}>
-              Coordenadas: {location.latitude.toFixed(4)},{" "}
-              {location.longitude?.toFixed(4)}
-            </Text>
+        <TouchableOpacity style={styles.button} onPress={handleSaveProfile} disabled={savingProfile}>
+          {savingProfile ? (
+            <ActivityIndicator color={colors.white} />
+          ) : (
+            <Text style={styles.buttonText}>Salvar perfil</Text>
           )}
+        </TouchableOpacity>
+      </View>
 
-          {locationError && <Text style={styles.error}>{locationError}</Text>}
+      <View style={styles.card}>
+        <Text style={styles.title}>Localização</Text>
 
-          <TouchableOpacity
-            style={styles.button}
-            onPress={handleSaveLocationText}
-            disabled={savingLocation}
-          >
-            <Text style={styles.buttonText}>Salvar província/cidade</Text>
-          </TouchableOpacity>
+        {loadingLocation ? (
+          <ActivityIndicator color={colors.purple} style={{ marginTop: 16 }} />
+        ) : (
+          <>
+            <Text style={styles.label}>Província</Text>
+            <View style={styles.regionRow}>
+              {provinces.map((p) => (
+                <TouchableOpacity
+                  key={p}
+                  style={[styles.provinceOption, province === p && styles.provinceOptionSelected]}
+                  onPress={() => setProvince(p)}
+                >
+                  <Text style={province === p ? styles.provinceTextSelected : styles.provinceText}>{p}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
 
-          <TouchableOpacity
-            style={[styles.button, styles.secondaryButton]}
-            onPress={handleUseCurrentLocation}
-            disabled={requestingGps}
-          >
-            {requestingGps ? (
-              <ActivityIndicator />
-            ) : (
-              <Text style={styles.secondaryButtonText}>
-                Usar minha localização atual
+            <Text style={styles.label}>Cidade</Text>
+            <TextInput style={styles.input} value={city} onChangeText={setCity} placeholderTextColor={colors.muted} />
+
+            {location?.latitude !== null && location?.latitude !== undefined && (
+              <Text style={styles.readOnly}>
+                Coordenadas: {location.latitude.toFixed(4)}, {location.longitude?.toFixed(4)}
               </Text>
             )}
-          </TouchableOpacity>
 
-          {location?.province && (
-            <TouchableOpacity onPress={handleRemoveLocation}>
-              <Text style={styles.link}>Remover localização</Text>
+            {locationError && <Text style={styles.error}>{locationError}</Text>}
+
+            <TouchableOpacity style={styles.button} onPress={handleSaveLocationText} disabled={savingLocation}>
+              <Text style={styles.buttonText}>Salvar província/cidade</Text>
             </TouchableOpacity>
-          )}
-        </>
-      )}
+
+            <TouchableOpacity
+              style={[styles.button, styles.secondaryButton]}
+              onPress={handleUseCurrentLocation}
+              disabled={requestingGps}
+            >
+              {requestingGps ? (
+                <ActivityIndicator color={colors.purple} />
+              ) : (
+                <Text style={styles.secondaryButtonText}>Usar minha localização atual</Text>
+              )}
+            </TouchableOpacity>
+
+            {location?.province && (
+              <TouchableOpacity onPress={handleRemoveLocation}>
+                <Text style={styles.link}>Remover localização</Text>
+              </TouchableOpacity>
+            )}
+          </>
+        )}
+      </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 24 },
-  title: { fontSize: 22, fontWeight: "bold" },
-  sectionSpacing: { marginTop: 32 },
-  label: { fontSize: 13, color: "#666", marginTop: 16, marginBottom: 4 },
-  readOnly: { fontSize: 15, color: "#333" },
+  screen: { flex: 1, backgroundColor: "#F7F9FD" },
+  container: { padding: 18, gap: 16, paddingBottom: 40 },
+  card: { backgroundColor: colors.white, borderRadius: radius.lg, padding: 20, ...cardShadow },
+  title: { fontSize: 17, fontFamily: fonts.extrabold, color: colors.ink },
+  label: { fontSize: 12, color: colors.muted, marginTop: 16, marginBottom: 6, fontFamily: fonts.bold },
+  readOnly: { fontSize: 14, color: colors.ink, fontFamily: fonts.semibold },
   input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 12,
+    borderWidth: 1.5,
+    borderColor: colors.line,
+    borderRadius: radius.md,
+    padding: 13,
+    fontSize: 14,
+    color: colors.ink,
+    fontFamily: fonts.regular,
   },
   regionRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   provinceOption: {
-    borderWidth: 1,
-    borderColor: "#ccc",
+    borderWidth: 1.5,
+    borderColor: colors.line,
     borderRadius: 20,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
     marginBottom: 8,
   },
-  provinceOptionSelected: { backgroundColor: "#111", borderColor: "#111" },
-  provinceText: { color: "#111", fontSize: 13 },
-  provinceTextSelected: { color: "#fff", fontSize: 13 },
+  provinceOptionSelected: { backgroundColor: colors.purple, borderColor: colors.purple },
+  provinceText: { color: colors.ink, fontSize: 12, fontFamily: fonts.semibold },
+  provinceTextSelected: { color: colors.white, fontSize: 12, fontFamily: fonts.bold },
   button: {
-    backgroundColor: "#111",
-    borderRadius: 8,
-    padding: 14,
+    backgroundColor: colors.purple,
+    borderRadius: radius.md,
+    padding: 15,
     alignItems: "center",
     marginTop: 16,
   },
-  secondaryButton: { backgroundColor: "#eee" },
-  buttonText: { color: "#fff", fontWeight: "600" },
-  secondaryButtonText: { color: "#111", fontWeight: "600" },
-  link: { textAlign: "center", marginTop: 16, color: "#c0392b" },
-  error: { color: "#c0392b", marginTop: 8 },
-  success: { color: "#27ae60", marginTop: 8 },
+  secondaryButton: { backgroundColor: "#F7F9FD", borderWidth: 1.5, borderColor: colors.line },
+  buttonText: { color: colors.white, fontFamily: fonts.extrabold, fontSize: 13 },
+  secondaryButtonText: { color: colors.ink, fontFamily: fonts.bold, fontSize: 13 },
+  link: { textAlign: "center", marginTop: 16, color: "#c0392b", fontFamily: fonts.semibold },
+  error: { color: "#c0392b", marginTop: 8, fontSize: 12, fontFamily: fonts.semibold },
+  success: { color: "#27ae60", marginTop: 8, fontSize: 12, fontFamily: fonts.semibold },
 });
