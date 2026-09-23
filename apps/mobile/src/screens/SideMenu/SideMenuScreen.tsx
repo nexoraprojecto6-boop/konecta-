@@ -19,7 +19,7 @@ export function SideMenuScreen({ navigation }: Props) {
     { icon: "home-outline", label: "Feed", onPress: () => navigation.navigate("Home") },
     { icon: "search-outline", label: "Descobrir", onPress: () => navigation.navigate("Discovery") },
     { icon: "notifications-outline", label: "Notificações", onPress: () => navigation.navigate("Notifications") },
-    { icon: "person-outline", label: "Minha conta", onPress: () => navigation.navigate("Profile") },
+    { icon: "person-outline", label: "Minha conta", onPress: () => navigation.navigate("Account") },
     { icon: "briefcase-outline", label: "Oferecer serviços", onPress: () => navigation.navigate("ActivateProfessional") },
   ];
 
