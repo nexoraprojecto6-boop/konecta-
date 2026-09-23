@@ -24,6 +24,12 @@ import { FeedSearchResultsScreen } from "../screens/Search/FeedSearchResultsScre
 import { PostDetailScreen } from "../screens/Post/PostDetailScreen";
 import { CommentsScreen } from "../screens/Post/CommentsScreen";
 import { ContactScreen } from "../screens/Post/ContactScreen";
+import { CreatePostTypeScreen } from "../screens/CreatePost/CreatePostTypeScreen";
+import { PostFormScreen } from "../screens/CreatePost/PostFormScreen";
+import { PostPreviewScreen } from "../screens/CreatePost/PostPreviewScreen";
+import { PostSuccessScreen } from "../screens/CreatePost/PostSuccessScreen";
+import { ContractsScreen } from "../screens/Contracts/ContractsScreen";
+import { ContractDetailScreen } from "../screens/Contracts/ContractDetailScreen";
 
 export type AuthStackParamList = {
   Splash: undefined;
@@ -52,6 +58,12 @@ export type RootStackParamList = {
   PostDetail: { postId: string };
   Comments: { postId: string };
   Contact: { postId: string };
+  CreatePostType: undefined;
+  PostForm: { type: string };
+  PostPreview: { type: string; title: string; desc: string; location: string; tags: string };
+  PostSuccess: undefined;
+  Contracts: undefined;
+  ContractDetail: { contractId: string };
 };
 
 export type AuthScreenProps = NativeStackScreenProps<AuthStackParamList>;
@@ -87,6 +99,12 @@ function AppStack() {
       <RootStack.Screen name="PostDetail" component={PostDetailScreen} options={{ headerShown: false }} />
       <RootStack.Screen name="Comments" component={CommentsScreen} options={{ headerShown: false }} />
       <RootStack.Screen name="Contact" component={ContactScreen} options={{ headerShown: false }} />
+      <RootStack.Screen name="CreatePostType" component={CreatePostTypeScreen} options={{ headerShown: false }} />
+      <RootStack.Screen name="PostForm" component={PostFormScreen} options={{ headerShown: false }} />
+      <RootStack.Screen name="PostPreview" component={PostPreviewScreen} options={{ headerShown: false }} />
+      <RootStack.Screen name="PostSuccess" component={PostSuccessScreen} options={{ headerShown: false }} />
+      <RootStack.Screen name="Contracts" component={ContractsScreen} options={{ headerShown: false }} />
+      <RootStack.Screen name="ContractDetail" component={ContractDetailScreen} options={{ headerShown: false }} />
     </RootStack.Navigator>
   );
 }
